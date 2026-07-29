@@ -312,7 +312,7 @@ export const VercelAestheticPreview: React.FC = () => {
                         {/* Model Configuration: Left-Aligned, Fills All Available Middle Space */}
                         <td className="px-2 sm:px-5 py-3 sm:py-3.5 font-brand-mono text-left w-full min-w-0">
                           <div className="space-y-0.5 sm:space-y-1">
-                            <div className="font-extrabold text-neutral-950 text-xs sm:text-base group-hover:text-purple-900 transition-colors leading-tight">
+                            <div className="font-extrabold text-neutral-950 text-sm sm:text-base group-hover:text-purple-900 transition-colors leading-tight">
                               {parsed.model}
                             </div>
                             {/* Desktop: Harness | Provider on single line */}
@@ -322,9 +322,9 @@ export const VercelAestheticPreview: React.FC = () => {
                               <span className="truncate">{parsed.provider}</span>
                             </div>
                             {/* Mobile: 2 Separate Stacked Lines for Harness & Provider (Total 3 Lines) */}
-                            <div className="sm:hidden space-y-0.5 text-[11px]">
+                            <div className="sm:hidden space-y-0.5 text-xs">
                               <div className="font-bold text-neutral-700 truncate">{parsed.harness}</div>
-                              <div className="font-medium text-neutral-500 truncate">{parsed.provider}</div>
+                              <div className="font-semibold text-neutral-500 truncate">{parsed.provider}</div>
                             </div>
                           </div>
                         </td>
@@ -333,11 +333,11 @@ export const VercelAestheticPreview: React.FC = () => {
                         <td className="px-2 sm:px-5 py-3 sm:py-3.5 text-right sm:text-center font-brand-mono shrink-0 whitespace-nowrap">
                           <div className="flex flex-col items-end sm:items-center">
                             {/* Line 1: Main Intelligence Score */}
-                            <div className="font-black text-black text-sm sm:text-xl leading-none">
+                            <div className="font-black text-black text-base sm:text-xl leading-none">
                               {formatScore(capabilityScore)}
                             </div>
                             {/* Line 2: Practical Score Adjustment & Final Score */}
-                            <div className="text-[10px] sm:text-sm text-neutral-500 font-medium whitespace-nowrap mt-1">
+                            <div className="text-[11px] sm:text-sm text-neutral-500 font-medium whitespace-nowrap mt-1">
                               (
                               <span className={`font-bold ${practicalAdjustmentTextClass(practicalAdjustment)}`}>
                                 {formatPracticalAdjustment(practicalAdjustment)}
@@ -387,7 +387,7 @@ export const VercelAestheticPreview: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-1 font-brand-mono">
               <div className="space-y-0.5 sm:space-y-1">
                 {/* Line 1: Model Name */}
-                <h2 className="text-xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight leading-tight">
+                <h2 className="text-2xl sm:text-3xl font-black text-neutral-950 tracking-tight leading-tight">
                   {parseConfigName(selectedScoreItem.config.name).model}
                 </h2>
 
@@ -400,10 +400,10 @@ export const VercelAestheticPreview: React.FC = () => {
 
                 {/* Mobile: 2 Separate Stacked Lines for Harness & Provider (Total 3 Lines) */}
                 <div className="sm:hidden space-y-0.5 font-brand-mono">
-                  <div className="text-sm font-bold text-neutral-700">
+                  <div className="text-base font-bold text-neutral-800">
                     {parseConfigName(selectedScoreItem.config.name).harness}
                   </div>
-                  <div className="text-xs font-medium text-neutral-500">
+                  <div className="text-base font-semibold text-neutral-500">
                     {parseConfigName(selectedScoreItem.config.name).provider}
                   </div>
                 </div>
