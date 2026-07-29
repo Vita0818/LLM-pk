@@ -3,6 +3,7 @@ import {
   Search,
   ArrowUpRight,
   ArrowUpDown,
+  ArrowLeft,
 } from 'lucide-react';
 import { DOMAIN_DEFINITIONS, ALL_METRIC_DEFINITIONS } from './engine/scoringEngine';
 import { DETAIL_ONLY_METRIC_DEFINITIONS } from './data/detailMetricDefinitions';
@@ -80,6 +81,7 @@ export const VercelAestheticPreview: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<'all' | 'reasoning' | 'top'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('practicalScore');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [hoveredDomain, setHoveredDomain] = useState<DomainId | null>(null);
   const scores: PublicLeaderboardScore[] = PUBLIC_SCORES;
 
   // Filtered scores
@@ -215,37 +217,23 @@ export const VercelAestheticPreview: React.FC = () => {
       {/* 1. Header Navigation */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 shadow-2xs">
         <div className="max-w-[1500px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          {/* Clean Website Name Only */}
-          <a href={import.meta.env.BASE_URL} className="font-brand-mono text-3xl font-black text-neutral-950 tracking-tight select-none hover:opacity-90 transition-opacity">
-            LLMpk
-          </a>
-
+          {/* Logo & Circular Back Button Next to LLMpk */}
           <div className="flex items-center gap-3">
-            {/* Navigation Pill Bar */}
-            <nav className="bg-neutral-100/90 rounded-[1.5rem] p-1 flex items-center gap-0.5 border border-neutral-200/60 shadow-sm">
+            <a href={import.meta.env.BASE_URL} className="font-brand-mono text-3xl font-black text-neutral-950 tracking-tight select-none hover:opacity-90 transition-opacity">
+              LLMpk
+            </a>
+
+            {/* Minimalist Pure Circular Back Button (hidden on homepage, visible on detail page) */}
+            {activeTab === 'detail' && (
               <button
                 onClick={() => setActiveTab('leaderboard')}
-                className={`rounded-3xl px-4 py-2 text-xs transition-colors ${
-                  activeTab === 'leaderboard'
-                    ? 'bg-black text-white shadow-sm font-bold'
-                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60 font-semibold'
-                }`}
+                className="w-8 h-8 rounded-full border border-neutral-200 bg-neutral-100/90 hover:bg-black hover:border-black text-neutral-700 hover:text-white flex items-center justify-center transition-all shadow-2xs shrink-0"
+                title="返回全量榜单"
+                aria-label="返回全量榜单"
               >
-                全量榜单
+                <ArrowLeft className="w-4 h-4 text-current shrink-0" />
               </button>
-
-              <button
-                onClick={() => setActiveTab('detail')}
-                className={`rounded-3xl px-4 py-2 text-xs transition-colors ${
-                  activeTab === 'detail'
-                    ? 'bg-black text-white shadow-sm font-bold'
-                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60 font-semibold'
-                }`}
-              >
-                配置分析
-              </button>
-
-            </nav>
+            )}
           </div>
         </div>
       </header>
@@ -454,6 +442,8 @@ export const VercelAestheticPreview: React.FC = () => {
                   ]}
                   size={680}
                   showLegend={false}
+                  hoveredDomain={hoveredDomain}
+                  onHoverDomain={setHoveredDomain}
                 />
               </div>
 
@@ -465,6 +455,8 @@ export const VercelAestheticPreview: React.FC = () => {
                     const def = getDomainDef(dId);
                     const scored = ALL_METRIC_DEFINITIONS.filter((m) => m.domain === dId);
                     const detailOnly = DETAIL_ONLY_METRIC_DEFINITIONS.filter((m) => m.domain === dId);
+                    const isDomainHovered = hoveredDomain !== null;
+                    const isMatchedDomain = hoveredDomain === dId;
 
                     return [...scored, ...detailOnly].map((m) => {
                       const obs = selectedScoreItem.config.observations[m.id];
@@ -475,11 +467,21 @@ export const VercelAestheticPreview: React.FC = () => {
                       return (
                         <div
                           key={m.id}
-                          className="flex min-w-0 items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-neutral-50 transition-colors border-b border-neutral-100/60"
+                          className={`flex min-w-0 items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 cursor-pointer transition-all duration-200 ${
+                            isMatchedDomain
+                              ? 'opacity-100'
+                              : isDomainHovered
+                              ? 'opacity-25 hover:opacity-100'
+                              : 'opacity-100'
+                          }`}
+                          onMouseEnter={() => setHoveredDomain(dId as DomainId)}
+                          onMouseLeave={() => setHoveredDomain(null)}
                           title={`${m.name} (${def.nameEn}) - Raw Value: ${formattedRaw}`}
                         >
                           <span
-                            className="min-w-0 font-bold truncate text-xs sm:text-sm"
+                            className={`min-w-0 truncate text-xs sm:text-sm ${
+                              isMatchedDomain ? 'font-black' : 'font-bold'
+                            }`}
                             style={{ color: def.color }}
                           >
                             {compactName}
@@ -495,7 +497,9 @@ export const VercelAestheticPreview: React.FC = () => {
                   {/* 2. Speed Metrics (Vibrant Orange #F97316) */}
                   <div
                     key="speed_throughput"
-                    className="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-neutral-50 transition-colors border-b border-neutral-100/60"
+                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 transition-all duration-200 ${
+                      hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
+                    }`}
                     title="Throughput Speed - Speed Metric (Raw Value)"
                   >
                     <span className="font-bold truncate text-xs sm:text-sm text-[#F97316]">
@@ -510,7 +514,9 @@ export const VercelAestheticPreview: React.FC = () => {
 
                   <div
                     key="speed_ttft"
-                    className="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-neutral-50 transition-colors border-b border-neutral-100/60"
+                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 transition-all duration-200 ${
+                      hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
+                    }`}
                     title="TTFT Latency - Speed Metric (Raw Value)"
                   >
                     <span className="font-bold truncate text-xs sm:text-sm text-[#F97316]">
@@ -526,7 +532,9 @@ export const VercelAestheticPreview: React.FC = () => {
                   {/* 3. Price/Cost Metrics (Vibrant Indigo #6366F1) */}
                   <div
                     key="cost_input"
-                    className="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-neutral-50 transition-colors border-b border-neutral-100/60"
+                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 transition-all duration-200 ${
+                      hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
+                    }`}
                     title={selectedScoreItem.config.subscriptionData
                       ? 'Monthly subscription price'
                       : 'Input Price - Price Metric (Raw Value)'}
@@ -548,7 +556,9 @@ export const VercelAestheticPreview: React.FC = () => {
 
                   <div
                     key="cost_output"
-                    className="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-neutral-50 transition-colors border-b border-neutral-100/60"
+                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 transition-all duration-200 ${
+                      hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
+                    }`}
                     title={selectedScoreItem.config.subscriptionData
                       ? 'API-equivalent monthly allowance and model-usable share'
                       : 'Output Price - Price Metric (Raw Value)'}

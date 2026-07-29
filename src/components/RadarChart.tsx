@@ -14,6 +14,8 @@ interface RadarChartProps {
   seriesList: RadarSeries[];
   size?: number;
   showLegend?: boolean;
+  hoveredDomain?: DomainId | null;
+  onHoverDomain?: (domain: DomainId | null) => void;
 }
 
 const DOMAIN_ORDER: DomainId[] = [
@@ -29,8 +31,18 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   seriesList,
   size = 360,
   showLegend = true,
+  hoveredDomain: controlledHoveredDomain,
+  onHoverDomain,
 }) => {
-  const [hoveredDomain, setHoveredDomain] = useState<DomainId | null>(null);
+  const [internalHoveredDomain, setInternalHoveredDomain] = useState<DomainId | null>(null);
+  const hoveredDomain = controlledHoveredDomain !== undefined ? controlledHoveredDomain : internalHoveredDomain;
+
+  const handleSetHoveredDomain = (d: DomainId | null) => {
+    setInternalHoveredDomain(d);
+    if (onHoverDomain) {
+      onHoverDomain(d);
+    }
+  };
 
   const center = size / 2;
   const radius = (size / 2) * 0.78;
@@ -101,8 +113,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({
                 y1={center}
                 x2={x2}
                 y2={y2}
-                stroke={isHovered ? DOMAIN_DEFINITIONS[dId].color : '#E2E8F0'}
-                strokeWidth={isHovered ? '2.5' : '1'}
+                stroke="#E2E8F0"
+                strokeWidth="1"
               />
             );
           })}
@@ -177,8 +189,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({
                       stroke="#FFFFFF"
                       strokeWidth="2.5"
                       className="transition-all duration-150 cursor-pointer"
-                      onMouseEnter={() => setHoveredDomain(point.dId)}
-                      onMouseLeave={() => setHoveredDomain(null)}
+                      onMouseEnter={() => handleSetHoveredDomain(point.dId)}
+                      onMouseLeave={() => handleSetHoveredDomain(null)}
                     >
                       <title>{`${series.name} - ${DOMAIN_DEFINITIONS[point.dId].name}: ${point.value.toFixed(1)}分`}</title>
                     </circle>
@@ -265,8 +277,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({
               <g
                 key={`vertex-score-${dId}`}
                 className="cursor-pointer group"
-                onMouseEnter={() => setHoveredDomain(dId)}
-                onMouseLeave={() => setHoveredDomain(null)}
+                onMouseEnter={() => handleSetHoveredDomain(dId)}
+                onMouseLeave={() => handleSetHoveredDomain(null)}
               >
                 {/* Line 1: Score Number in Domain Color */}
                 <text
