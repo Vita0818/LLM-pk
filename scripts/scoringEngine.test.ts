@@ -302,6 +302,102 @@ nearlyEqual(
 assert.equal(fourDomainItem.coverageStatus, 'provisional');
 assert.equal(fourDomainItem.eligibleForGlobalLeaderboard, true);
 
+const duplicateAccessMetric = metric('duplicate_access_metric', 1);
+const capabilityReferenceHigh = makeConfiguration('reference-high', {
+  duplicate_access_metric: observation('duplicate_access_metric', 1000),
+});
+const capabilityReferenceLow = makeConfiguration('reference-low', {
+  duplicate_access_metric: observation('duplicate_access_metric', 900),
+});
+const baselineCapabilityScores = processLLMpkBatchScoring(
+  [capabilityReferenceHigh, capabilityReferenceLow],
+  [duplicateAccessMetric],
+);
+const comparisonOnlySubscription = makeConfiguration('subscription-copy', {
+  duplicate_access_metric: observation('duplicate_access_metric', 1000),
+});
+comparisonOnlySubscription.capabilityReferenceIncluded = false;
+const capabilityScoresWithSubscription = processLLMpkBatchScoring(
+  [
+    capabilityReferenceHigh,
+    capabilityReferenceLow,
+    comparisonOnlySubscription,
+  ],
+  [duplicateAccessMetric],
+);
+for (const baseline of baselineCapabilityScores) {
+  const withSubscription = capabilityScoresWithSubscription.find(
+    (result) => result.config.id === baseline.config.id,
+  );
+  assert.ok(withSubscription);
+  nearlyEqual(withSubscription.rawCapabilityScore!, baseline.rawCapabilityScore!);
+}
+nearlyEqual(
+  capabilityScoresWithSubscription.find(
+    (result) => result.config.id === 'subscription-copy',
+  )!.rawCapabilityScore!,
+  baselineCapabilityScores.find(
+    (result) => result.config.id === 'reference-high',
+  )!.rawCapabilityScore!,
+);
+
+const apiCostConfiguration = makeConfiguration('api-cost-route', {});
+apiCostConfiguration.openRouterData = {
+  inputPricePerMToken: 10,
+  outputPricePerMToken: 20,
+  ttftP50Seconds: 1,
+  throughputP50TokensPerSec: 50,
+};
+const chatGptSubscriptionConfiguration = makeConfiguration(
+  'chatgpt-pro-subscription',
+  {},
+);
+chatGptSubscriptionConfiguration.openRouterData = {
+  ...apiCostConfiguration.openRouterData,
+};
+chatGptSubscriptionConfiguration.subscriptionData = {
+  planName: 'ChatGPT Pro 20× Subscription',
+  monthlyPriceUSD: 200,
+  apiEquivalentCostUSD: 2521,
+  usableQuotaFraction: 1,
+};
+const claudeSubscriptionConfiguration = makeConfiguration(
+  'claude-max-subscription',
+  {},
+);
+claudeSubscriptionConfiguration.openRouterData = {
+  ...apiCostConfiguration.openRouterData,
+};
+claudeSubscriptionConfiguration.subscriptionData = {
+  planName: 'Claude Max 20× Subscription',
+  monthlyPriceUSD: 200,
+  apiEquivalentCostUSD: 1598,
+  usableQuotaFraction: 0.5,
+};
+const subscriptionCostResults = processLLMpkBatchScoring([
+  apiCostConfiguration,
+  chatGptSubscriptionConfiguration,
+  claudeSubscriptionConfiguration,
+]);
+const subscriptionCostsById = new Map(subscriptionCostResults.map((result) => [
+  result.config.id,
+  result.practicalBreakdown.effectiveScenarioCostUSD,
+]));
+nearlyEqual(subscriptionCostsById.get('api-cost-route')!, 15);
+nearlyEqual(
+  subscriptionCostsById.get('chatgpt-pro-subscription')!,
+  15 * 200 / 2521,
+);
+nearlyEqual(
+  subscriptionCostsById.get('claude-max-subscription')!,
+  15 * 200 / (1598 * 0.5),
+);
+assert.ok(
+  subscriptionCostsById.get('claude-max-subscription')!
+    > subscriptionCostsById.get('chatgpt-pro-subscription')!,
+  'Fable 5 must not receive the unavailable half of the Claude Max allowance.',
+);
+
 const adjustmentBreakdown = {
   rawCapabilityScore: 70,
   speedDelta: 2,

@@ -654,7 +654,10 @@ for (const preset of BUILT_IN_CONFIGURATION_PRESETS) {
       continue;
     }
     if (declaration.provenance.kind === 'lower_profile_fallback') {
-      assert.equal(preset.access, 'api', `Only API preset ${preset.id} may declare a fallback.`);
+      assert.ok(
+        preset.access === 'api' || preset.access === 'subscription',
+        `Only API/subscription preset ${preset.id} may declare a fallback.`,
+      );
       assert.equal(
         preset.identity.model.profile,
         declaration.provenance.targetProfile,
@@ -666,7 +669,10 @@ for (const preset of BUILT_IN_CONFIGURATION_PRESETS) {
       );
       expectedLowerProfileFallbackCount += 1;
     } else if (declaration.provenance.kind === 'lower_harness_fallback') {
-      assert.equal(preset.access, 'api', `Only API preset ${preset.id} may declare a fallback.`);
+      assert.ok(
+        preset.access === 'api' || preset.access === 'subscription',
+        `Only API/subscription preset ${preset.id} may declare a fallback.`,
+      );
       assert.equal(preset.identity.harness.name, declaration.provenance.targetHarness);
       assert.equal(preset.identity.model.profile, declaration.provenance.targetProfile);
       assert.equal(declaration.provenance.sourceProfile, declaration.provenance.targetProfile);
@@ -684,7 +690,10 @@ for (const preset of BUILT_IN_CONFIGURATION_PRESETS) {
       }
       expectedLowerHarnessFallbackCount += 1;
     } else if (declaration.provenance.kind === 'lower_profile_harness_fallback') {
-      assert.equal(preset.access, 'api', `Only API preset ${preset.id} may declare a fallback.`);
+      assert.ok(
+        preset.access === 'api' || preset.access === 'subscription',
+        `Only API/subscription preset ${preset.id} may declare a fallback.`,
+      );
       assert.equal(preset.identity.harness.name, declaration.provenance.targetHarness);
       assert.equal(preset.identity.model.profile, declaration.provenance.targetProfile);
       assert.ok(
@@ -718,8 +727,8 @@ assert.ok(
 );
 assert.equal(
   BUILT_IN_CONFIGURATION_MAX_PER_MODEL,
-  1,
-  'Every model product line must expose only its strongest usable configuration.',
+  2,
+  'A model may expose one strongest primary route plus one explicit subscription route.',
 );
 assert.equal(
   BUILT_IN_CONFIGURATION_CURATION_ROWS.length,
@@ -907,6 +916,54 @@ for (const preset of BUILT_IN_CONFIGURATION_PRESETS.filter(({ access }) => acces
     providerLabel?.endsWith(' API') && providerLabel !== 'API',
     `API preset ${preset.id} must name the model author's vendor without binding to one serving endpoint.`,
   );
+}
+const expectedSubscriptionPresets = new Map<string, {
+  basePresetId: string;
+  providerLabel: string;
+  monthlyPriceUSD: number;
+  apiEquivalentCostUSD: number;
+  usableQuotaFraction: number;
+}>([
+  [
+    'builtin.subscription.chatgpt-pro-20x.gpt-5-6-sol.max.codex-cli',
+    {
+      basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
+      providerLabel: 'ChatGPT Pro 20× Subscription',
+      monthlyPriceUSD: 200,
+      apiEquivalentCostUSD: 2521,
+      usableQuotaFraction: 1,
+    },
+  ],
+  [
+    'builtin.subscription.claude-max-20x.claude-fable-5.max.claude-code',
+    {
+      basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
+      providerLabel: 'Claude Max 20× Subscription',
+      monthlyPriceUSD: 200,
+      apiEquivalentCostUSD: 1598,
+      usableQuotaFraction: 0.5,
+    },
+  ],
+]);
+const subscriptionPresets = BUILT_IN_CONFIGURATION_PRESETS
+  .filter(({ access }) => access === 'subscription');
+assert.equal(subscriptionPresets.length, expectedSubscriptionPresets.size);
+for (const preset of subscriptionPresets) {
+  const expected = expectedSubscriptionPresets.get(preset.id);
+  assert.ok(expected, `Unexpected subscription preset ${preset.id}.`);
+  assert.equal(preset.displayName.split(' | ')[2], expected.providerLabel);
+  assert.deepEqual(preset.subscriptionData, {
+    planName: expected.providerLabel,
+    monthlyPriceUSD: expected.monthlyPriceUSD,
+    apiEquivalentCostUSD: expected.apiEquivalentCostUSD,
+    usableQuotaFraction: expected.usableQuotaFraction,
+  });
+  const basePreset = BUILT_IN_CONFIGURATION_PRESETS.find(
+    (candidate) => candidate.id === expected.basePresetId,
+  );
+  assert.ok(basePreset);
+  assert.deepEqual(preset.sourceCardIds, basePreset.sourceCardIds);
+  assert.deepEqual(preset.sourceCardLinks, basePreset.sourceCardLinks);
 }
 for (const [presetId, expectedProviderLabel] of [
   ['builtin.harness.claude-opus-4-8.max.claude-code', 'Anthropic API'],

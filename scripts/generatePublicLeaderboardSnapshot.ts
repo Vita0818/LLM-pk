@@ -69,6 +69,15 @@ const scores: PublicLeaderboardScore[] = adminMappingStore
           outputPricePerMToken: sourceOpenRouterData.outputPricePerMToken,
           ttftP50Seconds: sourceOpenRouterData.ttftP50Seconds,
           throughputP50TokensPerSec: sourceOpenRouterData.throughputP50TokensPerSec,
+      }
+      : undefined;
+    const sourceSubscriptionData = score.config.subscriptionData;
+    const subscriptionData = sourceSubscriptionData
+      ? {
+          planName: sourceSubscriptionData.planName,
+          monthlyPriceUSD: sourceSubscriptionData.monthlyPriceUSD,
+          apiEquivalentCostUSD: sourceSubscriptionData.apiEquivalentCostUSD,
+          usableQuotaFraction: sourceSubscriptionData.usableQuotaFraction,
         }
       : undefined;
 
@@ -82,6 +91,7 @@ const scores: PublicLeaderboardScore[] = adminMappingStore
         },
         observations,
         ...(openRouterData ? { openRouterData } : {}),
+        ...(subscriptionData ? { subscriptionData } : {}),
       },
       domainScores,
       rawCapabilityScore: score.rawCapabilityScore,

@@ -2,6 +2,7 @@ import type {
   DomainId,
   OpenRouterCostSpeedData,
   PracticalScoreBreakdown,
+  SubscriptionCostData,
 } from './llm_pk';
 
 export interface PublicMetricObservation {
@@ -17,6 +18,14 @@ export type PublicOpenRouterData = Pick<
   | 'throughputP50TokensPerSec'
 >;
 
+export type PublicSubscriptionData = Pick<
+  SubscriptionCostData,
+  | 'planName'
+  | 'monthlyPriceUSD'
+  | 'apiEquivalentCostUSD'
+  | 'usableQuotaFraction'
+>;
+
 export interface PublicLeaderboardConfiguration {
   id: string;
   name: string;
@@ -26,6 +35,7 @@ export interface PublicLeaderboardConfiguration {
   };
   observations: Record<string, PublicMetricObservation>;
   openRouterData?: PublicOpenRouterData;
+  subscriptionData?: PublicSubscriptionData;
 }
 
 export interface PublicLeaderboardScore {

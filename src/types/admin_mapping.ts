@@ -1,10 +1,11 @@
 export type SourceType = 'artificial_analysis' | 'arena' | 'openrouter';
 
 /**
- * How a shipped configuration is reached. Only `api` configurations may
- * carry an explicitly-authorized lower-profile or Chat-to-harness fallback.
+ * How a shipped configuration is reached. API and explicit subscription
+ * configurations may carry an authored lower-profile or Chat-to-harness
+ * fallback; a manually relabelled route never gains that authorization.
  */
-export type ConfigurationAccess = 'api' | 'managed-service' | 'inferred';
+export type ConfigurationAccess = 'api' | 'subscription' | 'managed-service' | 'inferred';
 
 /**
  * Human-readable identity for one configuration. These fields describe the

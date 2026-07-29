@@ -508,13 +508,19 @@ export const VercelAestheticPreview: React.FC = () => {
                   <div
                     key="cost_input"
                     className="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-neutral-50 transition-colors border-b border-neutral-100/60"
-                    title="Input Price - Price Metric (Raw Value)"
+                    title={selectedScoreItem.config.subscriptionData
+                      ? 'Monthly subscription price'
+                      : 'Input Price - Price Metric (Raw Value)'}
                   >
                     <span className="font-bold truncate text-xs sm:text-sm text-[#6366F1]">
-                      Input Price
+                      {selectedScoreItem.config.subscriptionData
+                        ? 'Monthly Price'
+                        : 'Input Price'}
                     </span>
                     <span className="font-brand-mono font-black text-neutral-950 text-xs sm:text-sm shrink-0">
-                      {selectedScoreItem.config.openRouterData?.inputPricePerMToken !== undefined &&
+                      {selectedScoreItem.config.subscriptionData
+                        ? selectedScoreItem.config.subscriptionData.monthlyPriceUSD.toFixed(0)
+                        : selectedScoreItem.config.openRouterData?.inputPricePerMToken !== undefined &&
                       selectedScoreItem.config.openRouterData?.inputPricePerMToken !== null
                         ? selectedScoreItem.config.openRouterData.inputPricePerMToken.toFixed(2)
                         : '--'}
@@ -524,13 +530,23 @@ export const VercelAestheticPreview: React.FC = () => {
                   <div
                     key="cost_output"
                     className="flex items-center justify-between gap-2 py-1 px-1.5 rounded hover:bg-neutral-50 transition-colors border-b border-neutral-100/60"
-                    title="Output Price - Price Metric (Raw Value)"
+                    title={selectedScoreItem.config.subscriptionData
+                      ? 'API-equivalent monthly allowance and model-usable share'
+                      : 'Output Price - Price Metric (Raw Value)'}
                   >
                     <span className="font-bold truncate text-xs sm:text-sm text-[#6366F1]">
-                      Output Price
+                      {selectedScoreItem.config.subscriptionData
+                        ? 'API Equivalent'
+                        : 'Output Price'}
                     </span>
                     <span className="font-brand-mono font-black text-neutral-950 text-xs sm:text-sm shrink-0">
-                      {selectedScoreItem.config.openRouterData?.outputPricePerMToken !== undefined &&
+                      {selectedScoreItem.config.subscriptionData
+                        ? `${selectedScoreItem.config.subscriptionData.apiEquivalentCostUSD.toFixed(0)}${
+                          selectedScoreItem.config.subscriptionData.usableQuotaFraction < 1
+                            ? ` × ${(selectedScoreItem.config.subscriptionData.usableQuotaFraction * 100).toFixed(0)}%`
+                            : ''
+                        }`
+                        : selectedScoreItem.config.openRouterData?.outputPricePerMToken !== undefined &&
                       selectedScoreItem.config.openRouterData?.outputPricePerMToken !== null
                         ? selectedScoreItem.config.openRouterData.outputPricePerMToken.toFixed(2)
                         : '--'}

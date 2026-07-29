@@ -444,8 +444,21 @@ export function transformRawMetric(value: number, metricType: string): number {
 // 2. Normalize single metric s_i: max=100, median=50
 export function normalizeMax100Median50(values: number[]): number[] {
   if (values.length === 0) return [];
-  const maxValue = Math.max(...values);
-  const medianValue = calculateMedian(values);
+  return normalizeMax100Median50AgainstReference(values, values);
+}
+
+/**
+ * Score comparison-only access routes without letting duplicate capability
+ * evidence move the calibration anchors for every other configuration.
+ */
+export function normalizeMax100Median50AgainstReference(
+  values: number[],
+  referenceValues: number[],
+): number[] {
+  if (values.length === 0) return [];
+  const calibrationValues = referenceValues.length > 0 ? referenceValues : values;
+  const maxValue = Math.max(...calibrationValues);
+  const medianValue = calculateMedian(calibrationValues);
 
   // If all values are identical, return neutral score 50
   if (
@@ -715,6 +728,12 @@ export function processLLMpkBatchScoring(
         c.execution.harness,
       )
     ));
+    const referenceEligibleConfigs = eligibleConfigs.filter(
+      (c) => c.capabilityReferenceIncluded !== false,
+    );
+    const referenceConfigIds = new Set(
+      referenceEligibleConfigs.map((configuration) => configuration.id),
+    );
     const validRows = eligibleConfigs.flatMap((c) => {
       const obs = c.observations[metricDef.id];
       if (obs && obs.rawValue !== null && Number.isFinite(obs.rawValue)) {
@@ -732,12 +751,20 @@ export function processLLMpkBatchScoring(
       return [];
     });
 
+    const referenceRows = validRows.filter((row) => referenceConfigIds.has(row.configId));
+    const calibrationRows = referenceRows.length > 0 ? referenceRows : validRows;
     const transformedYList = validRows.map((row) => row.y);
-    const baseScores = normalizeMax100Median50(transformedYList);
-    const reliability = calculateMetricReliability(
+    const calibrationYList = calibrationRows.map((row) => row.y);
+    const baseScores = normalizeMax100Median50AgainstReference(
       transformedYList,
-      validRows.map((row) => row.uncertaintyRadius),
-      eligibleConfigs.length,
+      calibrationYList,
+    );
+    const reliability = calculateMetricReliability(
+      calibrationYList,
+      calibrationRows.map((row) => row.uncertaintyRadius),
+      referenceRows.length > 0
+        ? referenceEligibleConfigs.length
+        : eligibleConfigs.length,
     );
     metricReliabilityMap[metricDef.id] = reliability;
 
@@ -885,8 +912,15 @@ export function processLLMpkBatchScoring(
       const q = configDomainQMap[c.id][dId];
       return q !== null && configDomainCoverageMap[c.id][dId] > 0;
     });
-    const normalizedD = normalizeMax100Median50(
-      scoreableConfigs.map((c) => configDomainQMap[c.id][dId]!)
+    const referenceScoreableConfigs = scoreableConfigs.filter(
+      (c) => c.capabilityReferenceIncluded !== false,
+    );
+    const calibrationConfigs = referenceScoreableConfigs.length > 0
+      ? referenceScoreableConfigs
+      : scoreableConfigs;
+    const normalizedD = normalizeMax100Median50AgainstReference(
+      scoreableConfigs.map((c) => configDomainQMap[c.id][dId]!),
+      calibrationConfigs.map((c) => configDomainQMap[c.id][dId]!),
     );
     scoreableConfigs.forEach((c, idx) => {
       finalDomainScoresMap[c.id][dId] = normalizedD[idx];
@@ -930,7 +964,32 @@ export function processLLMpkBatchScoring(
     if (!Number.isFinite(input) || !Number.isFinite(output) || input < 0 || output < 0) {
       return null;
     }
-    return input + 0.25 * output;
+    const apiScenarioCost = input + 0.25 * output;
+    if (!c.subscriptionData) return apiScenarioCost;
+
+    const {
+      monthlyPriceUSD,
+      apiEquivalentCostUSD,
+      usableQuotaFraction,
+    } = c.subscriptionData;
+    if (
+      !Number.isFinite(monthlyPriceUSD)
+      || monthlyPriceUSD <= 0
+      || !Number.isFinite(apiEquivalentCostUSD)
+      || apiEquivalentCostUSD <= 0
+      || !Number.isFinite(usableQuotaFraction)
+      || usableQuotaFraction <= 0
+      || usableQuotaFraction > 1
+    ) return null;
+
+    // Convert a fixed monthly plan back to the same standard-workload scale
+    // used by API rows. Example: if $200 buys $2,000 of API-equivalent work,
+    // the subscription's effective scenario cost is 10% of the API route.
+    const usableApiEquivalentCostUSD =
+      apiEquivalentCostUSD * usableQuotaFraction;
+    return apiScenarioCost
+      * monthlyPriceUSD
+      / usableApiEquivalentCostUSD;
   });
 
   const validCosts = scenarioCosts.filter(

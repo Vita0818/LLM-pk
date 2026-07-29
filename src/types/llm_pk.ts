@@ -74,10 +74,29 @@ export interface OpenRouterCostSpeedData {
   uptime30d?: number;            // percentage, e.g., 99.8
 }
 
+/**
+ * Fixed-price subscription economics expressed against the same model's API
+ * route. The usable quota fraction is model-specific: 1 means the full plan
+ * allowance is available, while 0.5 means only half can be spent on it.
+ */
+export interface SubscriptionCostData {
+  planName: string;
+  monthlyPriceUSD: number;
+  apiEquivalentCostUSD: number;
+  usableQuotaFraction: number;
+}
+
 export interface LLMConfiguration {
   id: string;
   name: string;
   provider: string; // e.g. OpenAI, Anthropic, Google, Moonshot, DeepSeek
+
+  /**
+   * False for an alternative access route that shares the same model,
+   * harness, and capability evidence with a reference configuration. It still
+   * receives scores, but must not double-weight the calibration cohort.
+   */
+  capabilityReferenceIncluded?: boolean;
   
   // 1. Identity
   identity: {
@@ -103,6 +122,9 @@ export interface LLMConfiguration {
 
   // OpenRouter Speed/Cost details if applicable
   openRouterData?: OpenRouterCostSpeedData;
+
+  // Fixed-price subscription details, when this is a subscription route.
+  subscriptionData?: SubscriptionCostData;
 
   // Atomic Observations map: metricId -> MetricObservation
   observations: Record<string, MetricObservation>;

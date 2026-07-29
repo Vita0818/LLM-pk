@@ -21,7 +21,12 @@ import {
   LinkedCardStackEntry,
   SourceType,
 } from '../types/admin_mapping';
-import { LLMConfiguration, ProcessedConfigurationScore, MetricObservation } from '../types/llm_pk';
+import {
+  LLMConfiguration,
+  ProcessedConfigurationScore,
+  MetricObservation,
+  SubscriptionCostData,
+} from '../types/llm_pk';
 import {
   ALL_METRIC_DEFINITIONS,
   processLLMpkBatchScoring,
@@ -431,7 +436,7 @@ function fallbackIsValidForPreset(
 ): boolean {
   const identity = sanitizeConfigurationIdentity(preset.identity);
   if (
-    preset.access !== 'api'
+    (preset.access !== 'api' && preset.access !== 'subscription')
     || !identity?.model?.profile
     || identity.model.profile !== provenance.targetProfile
   ) return false;
@@ -469,9 +474,9 @@ function fallbackIsValidForPreset(
 
 /**
  * A fallback is a shipped, authored policy—not an operator drag/drop option.
- * It remains valid only if the box still has the unchanged API identity of
- * that exact preset, and if that preset lists this exact source-card ID with
- * the same explicit low-to-high declaration.
+ * It remains valid only if the box still has the unchanged API or subscription
+ * identity of that exact preset, and if that preset lists this exact
+ * source-card ID with the same explicit low-to-high declaration.
  */
 function fallbackIsAuthorizedForBox(
   box: ConfigurationBox,
@@ -905,6 +910,34 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function sanitizeSubscriptionCostData(value: unknown): SubscriptionCostData | undefined {
+  if (!isPlainRecord(value)) return undefined;
+  const planName = typeof value.planName === 'string' ? value.planName.trim() : '';
+  const monthlyPriceUSD = value.monthlyPriceUSD;
+  const apiEquivalentCostUSD = value.apiEquivalentCostUSD;
+  const usableQuotaFraction = value.usableQuotaFraction;
+  if (
+    !planName
+    || typeof monthlyPriceUSD !== 'number'
+    || !Number.isFinite(monthlyPriceUSD)
+    || monthlyPriceUSD <= 0
+    || typeof apiEquivalentCostUSD !== 'number'
+    || !Number.isFinite(apiEquivalentCostUSD)
+    || apiEquivalentCostUSD <= 0
+    || typeof usableQuotaFraction !== 'number'
+    || !Number.isFinite(usableQuotaFraction)
+    || usableQuotaFraction <= 0
+    || usableQuotaFraction > 1
+  ) return undefined;
+
+  return {
+    planName,
+    monthlyPriceUSD,
+    apiEquivalentCostUSD,
+    usableQuotaFraction,
+  };
+}
+
 function exactSourceModelName(value: string): string {
   // Whitespace that cannot be observed in a source UI should not make an
   // otherwise exact identity fail to reconcile. Case is intentionally kept:
@@ -1219,6 +1252,10 @@ function hasInstallablePresetIdentity(
   preset: BuiltInConfigurationPreset,
 ): preset is BuiltInConfigurationPreset & { identity: Required<ConfigurationIdentity> } {
   const identity = sanitizeConfigurationIdentity(preset.identity);
+  const subscriptionData = sanitizeSubscriptionCostData(preset.subscriptionData);
+  const hasValidAccessData = preset.access === 'subscription'
+    ? Boolean(subscriptionData)
+    : preset.subscriptionData === undefined;
   return Boolean(
     typeof preset.id === 'string' && preset.id.trim().length > 0
     && typeof preset.internalName === 'string' && preset.internalName.trim().length > 0
@@ -1229,7 +1266,8 @@ function hasInstallablePresetIdentity(
     && identity?.harness?.name
     && identity?.harness?.environment
     && identity?.provider?.name
-    && identity?.provider?.upstream,
+    && identity?.provider?.upstream
+    && hasValidAccessData,
   );
 }
 
@@ -2122,7 +2160,8 @@ export class AdminMappingStore {
       updatedAt: new Date().toISOString().split('T')[0],
     };
 
-    // A fallback is authorized for one unchanged shipped API identity only.
+    // A fallback is authorized for one unchanged shipped API/subscription
+    // identity only.
     // If an operator changes that identity (for example to a subscription or
     // another harness), remove just the now-invalid fallback from this box
     // rather than letting it continue to supply data under a new label.
@@ -2345,6 +2384,19 @@ export class AdminMappingStore {
     const openRouterCard = this.getLinkedCard(box.id, 'openrouter');
     const linkedStack = this.getLinkedCardStack(box.id);
     const configurationIdentity = sanitizeConfigurationIdentity(box.identity);
+    const builtInPresetId = sanitizeBuiltInPresetId(box.builtInPresetId);
+    const builtInPreset = builtInPresetId
+      ? BUILT_IN_CONFIGURATION_PRESETS.find((preset) => preset.id === builtInPresetId)
+      : undefined;
+    const subscriptionData = (
+      builtInPreset?.access === 'subscription'
+      && sameConfigurationIdentity(
+        configurationIdentity,
+        sanitizeConfigurationIdentity(builtInPreset.identity),
+      )
+    )
+      ? sanitizeSubscriptionCostData(builtInPreset.subscriptionData)
+      : undefined;
     const observationsMap: Record<string, MetricObservation> = {};
 
     // The stack is already top-to-bottom. The first verified observation for
@@ -2456,6 +2508,7 @@ export class AdminMappingStore {
       id: box.id,
       name: configName,
       provider: readerFacingProvider,
+      ...(subscriptionData ? { capabilityReferenceIncluded: false } : {}),
       tags: [box.internalName, box.enabled ? '已启用入榜' : '未启用'],
       identity: {
         modelName: configurationIdentity?.model?.name || box.displayName,
@@ -2468,10 +2521,17 @@ export class AdminMappingStore {
         toolPermissions: ['Web Search', 'Code Execution'],
       },
       access: {
-        entryPoint: usesOpenRouter ? 'OpenRouter API' : 'Direct Provider API',
+        entryPoint: subscriptionData
+          ? subscriptionData.planName.startsWith('ChatGPT')
+            ? 'ChatGPT Pro Subscription'
+            : 'Claude Max Subscription'
+          : usesOpenRouter
+            ? 'OpenRouter API'
+            : 'Direct Provider API',
         providerEndpoint,
       },
       ...(openRouterData ? { openRouterData } : {}),
+      ...(subscriptionData ? { subscriptionData } : {}),
       observations: observationsMap,
     };
   }

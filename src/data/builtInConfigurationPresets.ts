@@ -6,6 +6,7 @@ import type {
   SourceObservation,
   SourceType,
 } from '../types/admin_mapping';
+import type { SubscriptionCostData } from '../types/llm_pk';
 import { ALL_METRIC_DEFINITIONS } from '../engine/scoringEngine';
 import { SCORING_CONFIG } from '../engine/scoringConfig';
 import {
@@ -100,6 +101,8 @@ export interface BuiltInConfigurationPreset {
   identity: BuiltInConfigurationIdentity;
   origin: BuiltInConfigurationPresetOrigin;
   access: BuiltInConfigurationPresetAccess;
+  /** Fixed-price plan economics for an explicit subscription route. */
+  subscriptionData?: SubscriptionCostData;
   /** Configuration caveats only; never contains a score or source observation. */
   note?: string;
   /**
@@ -2778,6 +2781,87 @@ const PROVIDER_NEUTRAL_PRACTICAL_AUGMENTATION =
     ...SOURCE_CATALOG_CONFIGURATION_PRESETS,
   ]);
 
+interface SubscriptionConfigurationSpec {
+  key: string;
+  basePresetId: string;
+  planName: string;
+  monthlyPriceUSD: number;
+  apiEquivalentCostUSD: number;
+  usableQuotaFraction: number;
+  note: string;
+}
+
+const SUBSCRIPTION_CONFIGURATION_SPECS: readonly SubscriptionConfigurationSpec[] = [
+  {
+    key: 'subscription.chatgpt-pro-20x.gpt-5-6-sol.max.codex-cli',
+    basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
+    planName: 'ChatGPT Pro 20× Subscription',
+    monthlyPriceUSD: 200,
+    apiEquivalentCostUSD: 2521,
+    usableQuotaFraction: 1,
+    note: '订阅额度折合 2521 美元同模型 API 用量；整份额度均可用于该配置。',
+  },
+  {
+    key: 'subscription.claude-max-20x.claude-fable-5.max.claude-code',
+    basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
+    planName: 'Claude Max 20× Subscription',
+    monthlyPriceUSD: 200,
+    apiEquivalentCostUSD: 1598,
+    usableQuotaFraction: 0.5,
+    note: '订阅总额度折合 1598 美元 API 用量；Fable 5 仅可使用其中 50%，即 799 美元等价值。',
+  },
+];
+
+/**
+ * A subscription is a separate model+harness+access configuration. Capability
+ * evidence stays tied to the identical model and production harness, while
+ * practical cost uses the fixed monthly plan instead of pretending it is an
+ * API route.
+ */
+function buildSubscriptionConfigurationPresets(
+  candidates: readonly BuiltInConfigurationPreset[],
+): BuiltInConfigurationPreset[] {
+  return SUBSCRIPTION_CONFIGURATION_SPECS.map((spec) => {
+    const base = candidates.find((preset) => preset.id === spec.basePresetId);
+    if (!base) {
+      throw new Error(`Missing subscription base preset ${spec.basePresetId}.`);
+    }
+
+    return definePreset({
+      key: spec.key,
+      productLineId: base.productLineId,
+      identity: {
+        model: { ...base.identity.model },
+        harness: { ...base.identity.harness },
+        provider: {
+          name: spec.planName,
+          upstream: `${spec.planName} fixed monthly plan`,
+        },
+      },
+      origin: base.origin,
+      access: 'subscription',
+      subscriptionData: {
+        planName: spec.planName,
+        monthlyPriceUSD: spec.monthlyPriceUSD,
+        apiEquivalentCostUSD: spec.apiEquivalentCostUSD,
+        usableQuotaFraction: spec.usableQuotaFraction,
+      },
+      note: [base.note, spec.note].filter(Boolean).join(' '),
+      ...(base.sourceCardIds
+        ? { sourceCardIds: [...base.sourceCardIds] }
+        : {}),
+      ...(base.sourceCardLinks
+        ? { sourceCardLinks: [...base.sourceCardLinks] }
+        : {}),
+    });
+  });
+}
+
+const SUBSCRIPTION_CONFIGURATION_PRESETS =
+  buildSubscriptionConfigurationPresets(
+    PROVIDER_NEUTRAL_PRACTICAL_AUGMENTATION.presets,
+  );
+
 interface PresetCoverageProfile {
   availableDomainCount: number;
   availableDomainIds: readonly string[];
@@ -2898,6 +2982,14 @@ export function buildPresetCoverageProfiles(
     const practicalComponentCount = [...PRACTICAL_METRIC_IDS]
       .filter((metricId) => metricIds.has(metricId))
       .length;
+    const subscriptionSignature = preset.subscriptionData
+      ? [
+          `plan=${preset.subscriptionData.planName}`,
+          `monthly=${preset.subscriptionData.monthlyPriceUSD}`,
+          `apiEquivalent=${preset.subscriptionData.apiEquivalentCostUSD}`,
+          `usableQuota=${preset.subscriptionData.usableQuotaFraction}`,
+        ].join(',')
+      : null;
     return [preset.id, {
       availableDomainCount,
       availableDomainIds,
@@ -2907,10 +2999,12 @@ export function buildPresetCoverageProfiles(
       exactHarnessMetricCount: exactHarnessMetricIds.size,
       observationCount: observations.length,
       practicalComponentCount,
-      effectiveDataSignature: [...effectiveMetricValues.entries()]
-        .sort(([left], [right]) => left.localeCompare(right, 'en-US'))
-        .map(([metricId, value]) => `${metricId}=${value}`)
-        .join('|'),
+      effectiveDataSignature: [
+        ...[...effectiveMetricValues.entries()]
+          .sort(([left], [right]) => left.localeCompare(right, 'en-US'))
+          .map(([metricId, value]) => `${metricId}=${value}`),
+        ...(subscriptionSignature ? [`subscription:${subscriptionSignature}`] : []),
+      ].join('|'),
     }];
   }));
 }
@@ -3207,8 +3301,9 @@ const READER_FACING_PRESET_EXCLUSIONS = new Set<string>([
 
 /**
  * The source sites expose hundreds of low-value execution variants. The
- * reader-facing catalog keeps only score-ready configurations, with exactly
- * one strongest usable profile per model product line. Models
+ * reader-facing catalog keeps only score-ready configurations, with one
+ * strongest usable profile per model product line plus explicitly requested
+ * subscription access routes. Models
  * released before the DeepSeek V4 cutoff are excluded. Key vendors may keep
  * several current model lines; every other vendor keeps only its newest
  * score-ready model. General source-catalog entries need five available
@@ -3286,8 +3381,12 @@ function curateReaderFacingPresets(
   );
   const selectedByGroup = new Map<string, BuiltInConfigurationPreset[]>();
   groups.forEach((group, modelGroupKey) => {
+    const subscriptionPresets = group
+      .filter((preset) => preset.access === 'subscription')
+      .sort(byHighest);
+    const primaryPresets = group.filter((preset) => preset.access !== 'subscription');
     const byHarness = new Map<string, BuiltInConfigurationPreset[]>();
-    group.forEach((preset) => {
+    primaryPresets.forEach((preset) => {
       const harnessKey = presetHarnessGroupKey(preset);
       const harnessGroup = byHarness.get(harnessKey) || [];
       harnessGroup.push(preset);
@@ -3321,11 +3420,14 @@ function curateReaderFacingPresets(
       // evidence supersedes the plain Chat row in the compact leaderboard.
       // Chat observations still fill that configuration in the one permitted
       // direction, so retaining both would duplicate the weaker execution.
-      selectedByGroup.set(modelGroupKey, [bestHarness]);
+      selectedByGroup.set(modelGroupKey, [bestHarness, ...subscriptionPresets]);
       return;
     }
 
-    selectedByGroup.set(modelGroupKey, selectedPerHarness);
+    selectedByGroup.set(modelGroupKey, [
+      ...selectedPerHarness,
+      ...subscriptionPresets,
+    ]);
   });
 
   const nonKeyGroupsByVendor = new Map<string, string[]>();
@@ -3386,6 +3488,7 @@ function curateReaderFacingPresets(
 
 export const ALL_CONFIGURATION_PRESET_CANDIDATES: readonly BuiltInConfigurationPreset[] = [
   ...PROVIDER_NEUTRAL_PRACTICAL_AUGMENTATION.presets,
+  ...SUBSCRIPTION_CONFIGURATION_PRESETS,
 ];
 
 const READER_FACING_CONFIGURATION_CURATION =
@@ -3435,4 +3538,4 @@ export const BUILT_IN_CONFIGURATION_PRESET_COUNT = BUILT_IN_CONFIGURATION_PRESET
  * additions visible during Vite hot updates as well as after a full reload.
  */
 export const BUILT_IN_CONFIGURATION_PRESET_INVENTORY_VERSION =
-  '2026-07-29-prune-sparse-lower-profiles-v27';
+  '2026-07-29-add-subscription-routes-v28';

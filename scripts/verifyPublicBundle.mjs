@@ -36,6 +36,13 @@ const allowedConfigurationKeys = new Set([
   'execution',
   'observations',
   'openRouterData',
+  'subscriptionData',
+]);
+const allowedSubscriptionKeys = new Set([
+  'planName',
+  'monthlyPriceUSD',
+  'apiEquivalentCostUSD',
+  'usableQuotaFraction',
 ]);
 
 if (
@@ -53,6 +60,23 @@ for (const score of publicSnapshot.scores) {
     throw new Error(
       `Public configuration ${score.config?.id ?? 'unknown'} exposes: ${unexpectedKeys.join(', ')}`,
     );
+  }
+
+  if (score.config?.subscriptionData) {
+    const subscriptionData = score.config.subscriptionData;
+    const unexpectedSubscriptionKeys = Object.keys(subscriptionData)
+      .filter((key) => !allowedSubscriptionKeys.has(key));
+    if (
+      unexpectedSubscriptionKeys.length > 0
+      || typeof subscriptionData.planName !== 'string'
+      || !Number.isFinite(subscriptionData.monthlyPriceUSD)
+      || !Number.isFinite(subscriptionData.apiEquivalentCostUSD)
+      || !Number.isFinite(subscriptionData.usableQuotaFraction)
+    ) {
+      throw new Error(
+        `Public subscription ${score.config?.id ?? 'unknown'} has invalid display data.`,
+      );
+    }
   }
 
   for (const observation of Object.values(score.config?.observations ?? {})) {
