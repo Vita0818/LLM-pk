@@ -727,8 +727,8 @@ assert.ok(
 );
 assert.equal(
   BUILT_IN_CONFIGURATION_MAX_PER_MODEL,
-  2,
-  'A model may expose one strongest primary route plus one explicit subscription route.',
+  3,
+  'A model may expose one strongest API route plus two non-redundant subscription efficiencies.',
 );
 assert.equal(
   BUILT_IN_CONFIGURATION_CURATION_ROWS.length,
@@ -925,23 +925,63 @@ const expectedSubscriptionPresets = new Map<string, {
   usableQuotaFraction: number;
 }>([
   [
+    'builtin.subscription.chatgpt-plus.gpt-5-6-sol.max.codex-cli',
+    {
+      basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
+      providerLabel: 'ChatGPT Plus',
+      monthlyPriceUSD: 20,
+      apiEquivalentCostUSD: 126.05,
+      usableQuotaFraction: 1,
+    },
+  ],
+  [
     'builtin.subscription.chatgpt-pro-20x.gpt-5-6-sol.max.codex-cli',
     {
       basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
-      providerLabel: 'ChatGPT Pro 20× Subscription',
+      providerLabel: 'ChatGPT Pro 20×',
       monthlyPriceUSD: 200,
       apiEquivalentCostUSD: 2521,
       usableQuotaFraction: 1,
     },
   ],
   [
+    'builtin.subscription.claude-pro.claude-fable-5.max.claude-code',
+    {
+      basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
+      providerLabel: 'Claude Pro',
+      monthlyPriceUSD: 20,
+      apiEquivalentCostUSD: 79.9,
+      usableQuotaFraction: 0.5,
+    },
+  ],
+  [
     'builtin.subscription.claude-max-20x.claude-fable-5.max.claude-code',
     {
       basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
-      providerLabel: 'Claude Max 20× Subscription',
+      providerLabel: 'Claude Max 20×',
       monthlyPriceUSD: 200,
       apiEquivalentCostUSD: 1598,
       usableQuotaFraction: 0.5,
+    },
+  ],
+  [
+    'builtin.subscription.claude-pro.claude-opus-5.max.claude-code',
+    {
+      basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
+      providerLabel: 'Claude Pro',
+      monthlyPriceUSD: 20,
+      apiEquivalentCostUSD: 79.9,
+      usableQuotaFraction: 1,
+    },
+  ],
+  [
+    'builtin.subscription.claude-max-20x.claude-opus-5.max.claude-code',
+    {
+      basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
+      providerLabel: 'Claude Max 20×',
+      monthlyPriceUSD: 200,
+      apiEquivalentCostUSD: 1598,
+      usableQuotaFraction: 1,
     },
   ],
 ]);
@@ -952,6 +992,11 @@ for (const preset of subscriptionPresets) {
   const expected = expectedSubscriptionPresets.get(preset.id);
   assert.ok(expected, `Unexpected subscription preset ${preset.id}.`);
   assert.equal(preset.displayName.split(' | ')[2], expected.providerLabel);
+  assert.equal(
+    preset.displayName.includes('Subscription'),
+    false,
+    `Reader-facing subscription source ${preset.id} must stay concise.`,
+  );
   assert.deepEqual(preset.subscriptionData, {
     planName: expected.providerLabel,
     monthlyPriceUSD: expected.monthlyPriceUSD,

@@ -356,9 +356,19 @@ chatGptSubscriptionConfiguration.openRouterData = {
   ...apiCostConfiguration.openRouterData,
 };
 chatGptSubscriptionConfiguration.subscriptionData = {
-  planName: 'ChatGPT Pro 20× Subscription',
+  planName: 'ChatGPT Pro 20×',
   monthlyPriceUSD: 200,
   apiEquivalentCostUSD: 2521,
+  usableQuotaFraction: 1,
+};
+const chatGptPlusConfiguration = makeConfiguration('chatgpt-plus', {});
+chatGptPlusConfiguration.openRouterData = {
+  ...apiCostConfiguration.openRouterData,
+};
+chatGptPlusConfiguration.subscriptionData = {
+  planName: 'ChatGPT Plus',
+  monthlyPriceUSD: 20,
+  apiEquivalentCostUSD: 2521 / 20,
   usableQuotaFraction: 1,
 };
 const claudeSubscriptionConfiguration = makeConfiguration(
@@ -369,15 +379,38 @@ claudeSubscriptionConfiguration.openRouterData = {
   ...apiCostConfiguration.openRouterData,
 };
 claudeSubscriptionConfiguration.subscriptionData = {
-  planName: 'Claude Max 20× Subscription',
+  planName: 'Claude Max 20×',
   monthlyPriceUSD: 200,
   apiEquivalentCostUSD: 1598,
   usableQuotaFraction: 0.5,
 };
+const claudeProFableConfiguration = makeConfiguration('claude-pro-fable', {});
+claudeProFableConfiguration.openRouterData = {
+  ...apiCostConfiguration.openRouterData,
+};
+claudeProFableConfiguration.subscriptionData = {
+  planName: 'Claude Pro',
+  monthlyPriceUSD: 20,
+  apiEquivalentCostUSD: 1598 / 20,
+  usableQuotaFraction: 0.5,
+};
+const claudeMaxOpusConfiguration = makeConfiguration('claude-max-opus', {});
+claudeMaxOpusConfiguration.openRouterData = {
+  ...apiCostConfiguration.openRouterData,
+};
+claudeMaxOpusConfiguration.subscriptionData = {
+  planName: 'Claude Max 20×',
+  monthlyPriceUSD: 200,
+  apiEquivalentCostUSD: 1598,
+  usableQuotaFraction: 1,
+};
 const subscriptionCostResults = processLLMpkBatchScoring([
   apiCostConfiguration,
+  chatGptPlusConfiguration,
   chatGptSubscriptionConfiguration,
+  claudeProFableConfiguration,
   claudeSubscriptionConfiguration,
+  claudeMaxOpusConfiguration,
 ]);
 const subscriptionCostsById = new Map(subscriptionCostResults.map((result) => [
   result.config.id,
@@ -389,13 +422,33 @@ nearlyEqual(
   15 * 200 / 2521,
 );
 nearlyEqual(
+  subscriptionCostsById.get('chatgpt-plus')!,
+  15 * 20 / (2521 / 20),
+);
+nearlyEqual(
   subscriptionCostsById.get('claude-max-subscription')!,
   15 * 200 / (1598 * 0.5),
+);
+nearlyEqual(
+  subscriptionCostsById.get('claude-pro-fable')!,
+  15 * 20 / ((1598 / 20) * 0.5),
+);
+nearlyEqual(
+  subscriptionCostsById.get('claude-max-opus')!,
+  15 * 200 / 1598,
 );
 assert.ok(
   subscriptionCostsById.get('claude-max-subscription')!
     > subscriptionCostsById.get('chatgpt-pro-subscription')!,
   'Fable 5 must not receive the unavailable half of the Claude Max allowance.',
+);
+nearlyEqual(
+  subscriptionCostsById.get('chatgpt-plus')!,
+  subscriptionCostsById.get('chatgpt-pro-subscription')! * 2,
+);
+nearlyEqual(
+  subscriptionCostsById.get('claude-max-subscription')!,
+  subscriptionCostsById.get('claude-max-opus')! * 2,
 );
 
 const adjustmentBreakdown = {

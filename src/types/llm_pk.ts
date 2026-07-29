@@ -115,7 +115,7 @@ export interface LLMConfiguration {
 
   // 3. Infrastructure / Access
   access: {
-    entryPoint: 'OpenRouter API' | 'Direct Provider API' | 'ChatGPT Pro Subscription' | 'Claude Max Subscription' | 'vLLM Local';
+    entryPoint: 'OpenRouter API' | 'Direct Provider API' | 'ChatGPT Subscription' | 'Claude Subscription' | 'vLLM Local';
     routingPolicy?: 'default' | 'price' | 'throughput' | 'fixed';
     providerEndpoint?: string;
   };

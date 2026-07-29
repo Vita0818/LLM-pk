@@ -147,6 +147,10 @@ export const VercelAestheticPreview: React.FC = () => {
   ];
 
   const formatScore = (s: number | null) => (s === null ? '--' : s.toFixed(1));
+  const formatCostValue = (value: number) => value.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
 
   // Split 3-part configuration name
   const parseConfigName = (name: string) => {
@@ -541,7 +545,7 @@ export const VercelAestheticPreview: React.FC = () => {
                     </span>
                     <span className="font-brand-mono font-black text-neutral-950 text-xs sm:text-sm shrink-0">
                       {selectedScoreItem.config.subscriptionData
-                        ? `${selectedScoreItem.config.subscriptionData.apiEquivalentCostUSD.toFixed(0)}${
+                        ? `${formatCostValue(selectedScoreItem.config.subscriptionData.apiEquivalentCostUSD)}${
                           selectedScoreItem.config.subscriptionData.usableQuotaFraction < 1
                             ? ` × ${(selectedScoreItem.config.subscriptionData.usableQuotaFraction * 100).toFixed(0)}%`
                             : ''

@@ -2791,24 +2791,67 @@ interface SubscriptionConfigurationSpec {
   note: string;
 }
 
+const CHATGPT_PRO_20X_API_EQUIVALENT_USD = 2521;
+const CLAUDE_MAX_20X_API_EQUIVALENT_USD = 1598;
+const BASE_PLAN_TO_20X_QUOTA_DIVISOR = 20;
+
 const SUBSCRIPTION_CONFIGURATION_SPECS: readonly SubscriptionConfigurationSpec[] = [
+  {
+    key: 'subscription.chatgpt-plus.gpt-5-6-sol.max.codex-cli',
+    basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
+    planName: 'ChatGPT Plus',
+    monthlyPriceUSD: 20,
+    apiEquivalentCostUSD:
+      CHATGPT_PRO_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
+    usableQuotaFraction: 1,
+    note: '按 20× 套餐反推，20 美元档折合 126.05 美元同模型 API 用量；100 美元 5× 档与其成本效率相同，因此不重复建盒。',
+  },
   {
     key: 'subscription.chatgpt-pro-20x.gpt-5-6-sol.max.codex-cli',
     basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
-    planName: 'ChatGPT Pro 20× Subscription',
+    planName: 'ChatGPT Pro 20×',
     monthlyPriceUSD: 200,
-    apiEquivalentCostUSD: 2521,
+    apiEquivalentCostUSD: CHATGPT_PRO_20X_API_EQUIVALENT_USD,
     usableQuotaFraction: 1,
     note: '订阅额度折合 2521 美元同模型 API 用量；整份额度均可用于该配置。',
   },
   {
+    key: 'subscription.claude-pro.claude-fable-5.max.claude-code',
+    basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
+    planName: 'Claude Pro',
+    monthlyPriceUSD: 20,
+    apiEquivalentCostUSD:
+      CLAUDE_MAX_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
+    usableQuotaFraction: 0.5,
+    note: '按 20× 套餐反推，20 美元档总额度折合 79.9 美元 API 用量；100 美元 5× 档与其成本效率相同，不重复建盒。Fable 5 仍只可使用其中 50%。',
+  },
+  {
     key: 'subscription.claude-max-20x.claude-fable-5.max.claude-code',
     basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
-    planName: 'Claude Max 20× Subscription',
+    planName: 'Claude Max 20×',
     monthlyPriceUSD: 200,
-    apiEquivalentCostUSD: 1598,
+    apiEquivalentCostUSD: CLAUDE_MAX_20X_API_EQUIVALENT_USD,
     usableQuotaFraction: 0.5,
     note: '订阅总额度折合 1598 美元 API 用量；Fable 5 仅可使用其中 50%，即 799 美元等价值。',
+  },
+  {
+    key: 'subscription.claude-pro.claude-opus-5.max.claude-code',
+    basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
+    planName: 'Claude Pro',
+    monthlyPriceUSD: 20,
+    apiEquivalentCostUSD:
+      CLAUDE_MAX_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
+    usableQuotaFraction: 1,
+    note: '按 20× 套餐反推，20 美元档折合 79.9 美元 API 用量；100 美元 5× 档与其成本效率相同，不重复建盒。Opus 5 可使用完整额度。',
+  },
+  {
+    key: 'subscription.claude-max-20x.claude-opus-5.max.claude-code',
+    basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
+    planName: 'Claude Max 20×',
+    monthlyPriceUSD: 200,
+    apiEquivalentCostUSD: CLAUDE_MAX_20X_API_EQUIVALENT_USD,
+    usableQuotaFraction: 1,
+    note: '订阅总额度折合 1598 美元 API 用量；Opus 5 没有 Fable 5 的 50% 限制，可使用完整额度。',
   },
 ];
 
@@ -3538,4 +3581,4 @@ export const BUILT_IN_CONFIGURATION_PRESET_COUNT = BUILT_IN_CONFIGURATION_PRESET
  * additions visible during Vite hot updates as well as after a full reload.
  */
 export const BUILT_IN_CONFIGURATION_PRESET_INVENTORY_VERSION =
-  '2026-07-29-add-subscription-routes-v28';
+  '2026-07-29-expand-subscription-routes-v29';
