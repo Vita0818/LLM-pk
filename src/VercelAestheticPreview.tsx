@@ -385,17 +385,27 @@ export const VercelAestheticPreview: React.FC = () => {
           <div className="space-y-4">
             {/* Header Area directly on background WITHOUT grey bottom border */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-1 font-brand-mono">
-              <div className="space-y-1">
+              <div className="space-y-0.5 sm:space-y-1">
                 {/* Line 1: Model Name */}
-                <h2 className="text-2xl sm:text-3xl font-bold text-neutral-950 tracking-tight">
+                <h2 className="text-xl sm:text-3xl font-extrabold text-neutral-950 tracking-tight leading-tight">
                   {parseConfigName(selectedScoreItem.config.name).model}
                 </h2>
 
-                {/* Line 2: Harness | Provider */}
-                <div className="flex items-center gap-1.5 font-bold text-neutral-950 text-2xl sm:text-3xl tracking-tight">
+                {/* Desktop: Harness | Provider on single line */}
+                <div className="hidden sm:flex items-center gap-1.5 font-bold text-neutral-950 text-2xl sm:text-3xl tracking-tight">
                   <span>{parseConfigName(selectedScoreItem.config.name).harness}</span>
                   <span className="text-neutral-300 font-normal">|</span>
                   <span>{parseConfigName(selectedScoreItem.config.name).provider}</span>
+                </div>
+
+                {/* Mobile: 2 Separate Stacked Lines for Harness & Provider (Total 3 Lines) */}
+                <div className="sm:hidden space-y-0.5 font-brand-mono">
+                  <div className="text-sm font-bold text-neutral-700">
+                    {parseConfigName(selectedScoreItem.config.name).harness}
+                  </div>
+                  <div className="text-xs font-medium text-neutral-500">
+                    {parseConfigName(selectedScoreItem.config.name).provider}
+                  </div>
                 </div>
               </div>
 
@@ -470,7 +480,7 @@ export const VercelAestheticPreview: React.FC = () => {
                       return (
                         <div
                           key={m.id}
-                          className={`flex min-w-0 items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 cursor-pointer transition-all duration-200 ${
+                          className={`flex min-w-0 items-center justify-between gap-2 py-1 px-1.5 rounded cursor-pointer transition-all duration-200 ${
                             isMatchedDomain
                               ? 'opacity-100'
                               : isDomainHovered
@@ -500,7 +510,7 @@ export const VercelAestheticPreview: React.FC = () => {
                   {/* 2. Speed Metrics (Vibrant Orange #F97316) */}
                   <div
                     key="speed_throughput"
-                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 transition-all duration-200 ${
+                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded transition-all duration-200 ${
                       hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
                     }`}
                     title="Throughput Speed - Speed Metric (Raw Value)"
@@ -517,7 +527,7 @@ export const VercelAestheticPreview: React.FC = () => {
 
                   <div
                     key="speed_ttft"
-                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 transition-all duration-200 ${
+                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded transition-all duration-200 ${
                       hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
                     }`}
                     title="TTFT Latency - Speed Metric (Raw Value)"
@@ -535,7 +545,7 @@ export const VercelAestheticPreview: React.FC = () => {
                   {/* 3. Price/Cost Metrics (Vibrant Indigo #6366F1) */}
                   <div
                     key="cost_input"
-                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 transition-all duration-200 ${
+                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded transition-all duration-200 ${
                       hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
                     }`}
                     title={selectedScoreItem.config.subscriptionData
@@ -559,7 +569,7 @@ export const VercelAestheticPreview: React.FC = () => {
 
                   <div
                     key="cost_output"
-                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded border-b border-neutral-100/60 transition-all duration-200 ${
+                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded transition-all duration-200 ${
                       hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
                     }`}
                     title={selectedScoreItem.config.subscriptionData
