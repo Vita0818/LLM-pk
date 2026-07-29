@@ -249,7 +249,7 @@ export const VercelAestheticPreview: React.FC = () => {
                 <thead>
                   <tr className="text-neutral-600 font-brand-mono text-[10px] sm:text-[11px] border-b border-neutral-200 bg-neutral-50/70 uppercase tracking-wider">
                     <th className="px-1.5 sm:px-4 py-3 text-center w-6 sm:w-12 font-bold shrink-0">#</th>
-                    <th className="px-2 sm:px-5 py-3 font-bold">Model Configuration</th>
+                    <th className="px-2 sm:px-5 py-3 font-bold text-left w-full">Model Configuration</th>
                     <th className="px-2 sm:px-5 py-3 text-right sm:text-center font-bold text-black whitespace-nowrap shrink-0">
                       <span className="md:hidden">{renderSortLabel('Score', 'practicalScore')}</span>
                       <span className="hidden md:inline">{renderSortLabel('Intelligence & Practical', 'practicalScore')}</span>
@@ -295,7 +295,7 @@ export const VercelAestheticPreview: React.FC = () => {
                         className="hover:bg-neutral-50/90 transition-colors duration-100 cursor-pointer group"
                       >
                         {/* Rank Badge */}
-                        <td className="px-1.5 sm:px-4 py-3 sm:py-3.5 text-center font-brand-mono font-bold text-neutral-500">
+                        <td className="px-1.5 sm:px-4 py-3 sm:py-3.5 text-center font-brand-mono font-bold text-neutral-500 shrink-0">
                           {rank === 1 ? (
                             <span className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-900 text-white text-[11px] sm:text-xs font-black shadow-2xs">1</span>
                           ) : rank === 2 ? (
@@ -309,8 +309,8 @@ export const VercelAestheticPreview: React.FC = () => {
                           )}
                         </td>
 
-                        {/* Model Configuration 3-Part Name: Stacked 3 Lines on Mobile */}
-                        <td className="px-2 sm:px-5 py-3 sm:py-3.5 font-brand-mono min-w-0">
+                        {/* Model Configuration: Left-Aligned, Fills All Available Middle Space */}
+                        <td className="px-2 sm:px-5 py-3 sm:py-3.5 font-brand-mono text-left w-full min-w-0">
                           <div className="space-y-0.5 sm:space-y-1">
                             <div className="font-extrabold text-neutral-950 text-xs sm:text-base group-hover:text-purple-900 transition-colors leading-tight">
                               {parsed.model}
@@ -329,8 +329,8 @@ export const VercelAestheticPreview: React.FC = () => {
                           </div>
                         </td>
 
-                        {/* Merged Intelligence & Practical Score Column: Pulled slightly closer inward */}
-                        <td className="pl-1 pr-3 sm:px-5 py-3 sm:py-3.5 text-right sm:text-center font-brand-mono shrink-0">
+                        {/* Scores Column: Right-Aligned to Far Edge, Shrink-0 */}
+                        <td className="px-2 sm:px-5 py-3 sm:py-3.5 text-right sm:text-center font-brand-mono shrink-0 whitespace-nowrap">
                           <div className="flex flex-col items-end sm:items-center">
                             {/* Line 1: Main Intelligence Score */}
                             <div className="font-black text-black text-sm sm:text-xl leading-none">
