@@ -272,7 +272,6 @@ export const VercelAestheticPreview: React.FC = () => {
                     <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-cyan-900">
                       {renderSortLabel('Search', 'search_knowledge')}
                     </th>
-                    <th className="px-1.5 sm:px-4 py-3 text-right w-6 sm:w-12 shrink-0"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100 font-sans text-neutral-900">
@@ -372,13 +371,6 @@ export const VercelAestheticPreview: React.FC = () => {
                             </td>
                           );
                         })}
-
-                        {/* Arrow Action */}
-                        <td className="px-2 sm:px-4 py-3 sm:py-4 text-right">
-                          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-neutral-100 group-hover:bg-black flex items-center justify-center transition-colors ml-auto shrink-0">
-                            <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-neutral-600 group-hover:text-white transition-colors" />
-                          </div>
-                        </td>
                       </tr>
                     );
                   })}
