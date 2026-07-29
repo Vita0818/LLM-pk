@@ -157,14 +157,14 @@ assert.equal(getCoverageStatus(SCORING_CONFIG.coverage.officialMinimum), 'offici
 assert.equal(getCoverageStatus(SCORING_CONFIG.coverage.officialMinimum - 0.001), 'provisional');
 assert.equal(getCoverageStatus(0), 'no_observed_data');
 assert.deepEqual(SCORING_CONFIG.practicalAdjustment, {
-  version: '1.1',
+  version: '1.2',
   speed: {
-    rewardScale: 4,
-    penaltyScale: 6,
+    rewardScale: 5,
+    penaltyScale: 8,
   },
   cost: {
-    rewardScale: 4,
-    penaltyScale: 9,
+    rewardScale: 5,
+    penaltyScale: 12,
   },
 });
 
@@ -486,4 +486,4 @@ assert.equal(
   null,
 );
 
-console.log('scoringEngine Scoring v1.2 + Practical Adjustment v1.1 policies: PASS');
+console.log('scoringEngine Scoring v1.2 + Practical Adjustment v1.2 policies: PASS');
