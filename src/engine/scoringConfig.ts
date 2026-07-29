@@ -6,6 +6,21 @@ import type { CoverageStatus, DomainId } from '../types/llm_pk';
  */
 export const SCORING_CONFIG = {
   version: '1.2',
+  practicalAdjustment: {
+    version: '1.1',
+    speed: {
+      /** Positive utility approaches this reward without reaching it. */
+      rewardScale: 4,
+      /** Negative utility approaches this penalty without reaching it. */
+      penaltyScale: 6,
+    },
+    cost: {
+      /** Positive utility approaches this reward without reaching it. */
+      rewardScale: 4,
+      /** Negative utility approaches this penalty without reaching it. */
+      penaltyScale: 9,
+    },
+  },
   reliability: {
     /** Absolute floor used by n_ref before it is capped by the cohort size. */
     participationMinimumAbsolute: 10,

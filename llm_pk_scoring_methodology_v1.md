@@ -1,6 +1,6 @@
 # LLM PK 评分系统方法说明
 
-**版本：Scoring v1.2 + Practical Adjustment v1.0**
+**版本：Scoring v1.2 + Practical Adjustment v1.1**
 
 本文档定义 LLM PK 网站中一个完整 LLM Configuration 的评分流程。本文档只规定数据处理与评分算法，不规定具体数据源、基准清单与权重分配。
 
@@ -956,8 +956,8 @@ u_v
 \boxed{
 \Delta_v=
 \begin{cases}
-3u_v, & u_v\ge0\\
-5u_v, & u_v<0
+4u_v, & u_v\ge0\\
+6u_v, & u_v<0
 \end{cases}
 }
 \]
@@ -965,13 +965,13 @@ u_v
 因此：
 
 \[
--5<\Delta_v<3
+-6<\Delta_v<4
 \]
 
 含义：
 
-- 速度优势最多约加 3 分；
-- 速度劣势最多约扣 5 分。
+- 速度优势最多约加 4 分；
+- 速度劣势最多约扣 6 分。
 
 ---
 
@@ -1060,8 +1060,8 @@ u_c=u(r_c)
 \boxed{
 \Delta_c=
 \begin{cases}
-3u_c, & u_c\ge0\\
-7u_c, & u_c<0
+4u_c, & u_c\ge0\\
+9u_c, & u_c<0
 \end{cases}
 }
 \]
@@ -1069,13 +1069,13 @@ u_c=u(r_c)
 因此：
 
 \[
--7<\Delta_c<3
+-9<\Delta_c<4
 \]
 
 含义：
 
-- 成本优势最多约加 3 分；
-- 成本劣势最多约扣 7 分。
+- 成本优势最多约加 4 分；
+- 成本劣势最多约扣 9 分。
 
 ---
 
@@ -1092,7 +1092,7 @@ P_i=R_i+\Delta_{v,i}+\Delta_{c,i}
 总调整范围：
 
 \[
--12<P_i-R_i<6
+-15<P_i-R_i<8
 \]
 
 可设置最低下限：

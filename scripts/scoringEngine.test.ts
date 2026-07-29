@@ -156,6 +156,17 @@ assert.equal(unobserved.eligibleForGlobalLeaderboard, false);
 assert.equal(getCoverageStatus(SCORING_CONFIG.coverage.officialMinimum), 'official');
 assert.equal(getCoverageStatus(SCORING_CONFIG.coverage.officialMinimum - 0.001), 'provisional');
 assert.equal(getCoverageStatus(0), 'no_observed_data');
+assert.deepEqual(SCORING_CONFIG.practicalAdjustment, {
+  version: '1.1',
+  speed: {
+    rewardScale: 4,
+    penaltyScale: 6,
+  },
+  cost: {
+    rewardScale: 4,
+    penaltyScale: 9,
+  },
+});
 
 // Sparse metric participation narrows the effective score range. Five observed
 // configurations among 35 eligible ones use n_ref=max(10, ceil(.6*35))=21.
@@ -475,4 +486,4 @@ assert.equal(
   null,
 );
 
-console.log('scoringEngine Scoring v1.2 reliability and available-domain aggregation policies: PASS');
+console.log('scoringEngine Scoring v1.2 + Practical Adjustment v1.1 policies: PASS');

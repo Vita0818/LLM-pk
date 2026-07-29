@@ -20,7 +20,7 @@ import {
   practicalAdjustmentTextClass,
 } from './utils/practicalAdjustment';
 
-type SortKey = 'rawCapabilityScore' | 'practicalAdjustment' | DomainId;
+type SortKey = 'rawCapabilityScore' | 'practicalScore' | DomainId;
 
 const PUBLIC_SCORES = (
   publicLeaderboardSnapshot as unknown as PublicLeaderboardSnapshot
@@ -78,15 +78,12 @@ export const VercelAestheticPreview: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedConfigId, setSelectedConfigId] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'reasoning' | 'top'>('all');
-  const [sortKey, setSortKey] = useState<SortKey>('rawCapabilityScore');
+  const [sortKey, setSortKey] = useState<SortKey>('practicalScore');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const scores: PublicLeaderboardScore[] = PUBLIC_SCORES;
 
   // Filtered scores
   const filteredScores = useMemo(() => {
-    const scoreForSort = (score: number | null) =>
-      score ?? Number.NEGATIVE_INFINITY;
-
     return scores
       .filter((s) => {
         const matchSearch =
@@ -115,22 +112,40 @@ export const VercelAestheticPreview: React.FC = () => {
         return true;
       })
       .sort((a, b) => {
-        let valueA: number;
-        let valueB: number;
+        let valueA: number | null;
+        let valueB: number | null;
 
         if (sortKey === 'rawCapabilityScore') {
           // Sort by the original unadjusted capability score (Intelligence Index)
-          valueA = scoreForSort(a.rawCapabilityScore);
-          valueB = scoreForSort(b.rawCapabilityScore);
-        } else if (sortKey === 'practicalAdjustment') {
-          valueA = scoreForSort(getPracticalAdjustment(a.practicalBreakdown));
-          valueB = scoreForSort(getPracticalAdjustment(b.practicalBreakdown));
+          valueA = a.rawCapabilityScore;
+          valueB = b.rawCapabilityScore;
+        } else if (sortKey === 'practicalScore') {
+          valueA = a.practicalBreakdown.practicalScore;
+          valueB = b.practicalBreakdown.practicalScore;
         } else {
-          valueA = scoreForSort(a.domainScores[sortKey].score);
-          valueB = scoreForSort(b.domainScores[sortKey].score);
+          valueA = a.domainScores[sortKey].score;
+          valueB = b.domainScores[sortKey].score;
         }
 
-        return sortOrder === 'desc' ? valueB - valueA : valueA - valueB;
+        // Missing values always remain at the bottom, even for ascending sorts.
+        if (valueA === null && valueB === null) {
+          return a.config.name.localeCompare(b.config.name);
+        }
+        if (valueA === null) return 1;
+        if (valueB === null) return -1;
+
+        const primaryDifference = sortOrder === 'desc'
+          ? valueB - valueA
+          : valueA - valueB;
+        if (Math.abs(primaryDifference) > Number.EPSILON) {
+          return primaryDifference;
+        }
+
+        // Keep ties deterministic and favor the stronger capability score.
+        const capabilityA = a.rawCapabilityScore ?? Number.NEGATIVE_INFINITY;
+        const capabilityB = b.rawCapabilityScore ?? Number.NEGATIVE_INFINITY;
+        return capabilityB - capabilityA
+          || a.config.name.localeCompare(b.config.name);
       });
   }, [scores, searchTerm, filterCategory, sortKey, sortOrder]);
 
@@ -248,7 +263,7 @@ export const VercelAestheticPreview: React.FC = () => {
                     <th className="px-4 py-3.5 text-center w-12 font-bold">#</th>
                     <th className="px-5 py-3.5 font-bold">Model Configuration (Model | Harness | Provider)</th>
                     <th className="px-5 py-3.5 text-center font-bold text-black">
-                      {renderSortLabel('Intelligence & Practical Score', 'rawCapabilityScore')}
+                      {renderSortLabel('Intelligence & Practical Score', 'practicalScore')}
                     </th>
                     <th className="px-3.5 py-3.5 text-center font-bold text-purple-900 border-l border-neutral-200">
                       {renderSortLabel('Chatting', 'chatting')}

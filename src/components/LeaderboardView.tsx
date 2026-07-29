@@ -14,7 +14,7 @@ interface LeaderboardViewProps {
   onSelectConfigForDetail: (scoreItem: ProcessedConfigurationScore) => void;
 }
 
-export type SortKey = 'rawCapabilityScore' | 'practicalAdjustment' | DomainId;
+export type SortKey = 'rawCapabilityScore' | 'practicalScore' | DomainId;
 
 interface LeaderboardRow {
   item: ProcessedConfigurationScore;
@@ -23,17 +23,15 @@ interface LeaderboardRow {
 }
 
 const formatScore = (score: number | null) => score === null ? '数据不足' : score.toFixed(1);
-const scoreForSort = (score: number | null) => score ?? Number.NEGATIVE_INFINITY;
-
 export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
   scoreItems,
   onSelectConfigForDetail,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('rawCapabilityScore'); // Default sorted by available-domain capability score
+  const [sortKey, setSortKey] = useState<SortKey>('practicalScore');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  // Sorted items (ranked by available-domain capability score from high to low by default)
+  // Sorted items (ranked by final practical score from high to low by default)
   const processedItems = useMemo<LeaderboardRow[]>(() => {
     const sortedItems = scoreItems
       .filter((item) => {
@@ -44,21 +42,37 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
         );
       })
       .sort((a, b) => {
-        let valA = 0;
-        let valB = 0;
+        let valA: number | null;
+        let valB: number | null;
 
         if (sortKey === 'rawCapabilityScore') {
-          valA = scoreForSort(a.rawCapabilityScore);
-          valB = scoreForSort(b.rawCapabilityScore);
-        } else if (sortKey === 'practicalAdjustment') {
-          valA = scoreForSort(getPracticalAdjustment(a.practicalBreakdown));
-          valB = scoreForSort(getPracticalAdjustment(b.practicalBreakdown));
+          valA = a.rawCapabilityScore;
+          valB = b.rawCapabilityScore;
+        } else if (sortKey === 'practicalScore') {
+          valA = a.practicalBreakdown.practicalScore;
+          valB = b.practicalBreakdown.practicalScore;
         } else {
-          valA = scoreForSort(a.domainScores[sortKey].score);
-          valB = scoreForSort(b.domainScores[sortKey].score);
+          valA = a.domainScores[sortKey].score;
+          valB = b.domainScores[sortKey].score;
         }
 
-        return sortOrder === 'desc' ? valB - valA : valA - valB;
+        if (valA === null && valB === null) {
+          return a.config.name.localeCompare(b.config.name);
+        }
+        if (valA === null) return 1;
+        if (valB === null) return -1;
+
+        const primaryDifference = sortOrder === 'desc'
+          ? valB - valA
+          : valA - valB;
+        if (Math.abs(primaryDifference) > Number.EPSILON) {
+          return primaryDifference;
+        }
+
+        const capabilityA = a.rawCapabilityScore ?? Number.NEGATIVE_INFINITY;
+        const capabilityB = b.rawCapabilityScore ?? Number.NEGATIVE_INFINITY;
+        return capabilityB - capabilityA
+          || a.config.name.localeCompare(b.config.name);
       });
 
     let formalRank = 0;
@@ -118,11 +132,11 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
               </th>
 
               <th 
-                onClick={() => handleSort('practicalAdjustment')}
+                onClick={() => handleSort('practicalScore')}
                 className="px-4 py-3.5 cursor-pointer text-slate-500 font-semibold hover:text-slate-900 transition-colors"
-                title="相对能力分的速度与成本净调整"
+                title="能力分叠加速度与成本奖惩后的最终分数"
               >
-                实用分 &Delta;
+                实用分
               </th>
 
                 {/* 6 Domain Headers */}
@@ -210,11 +224,16 @@ export const LeaderboardView: React.FC<LeaderboardViewProps> = ({
                       </span>
                     </td>
 
-                    {/* Net practical adjustment on top of capability */}
-                    <td className={`px-4 py-3.5 font-mono font-bold ${
-                      practicalAdjustmentTextClass(practicalAdjustment)
-                    }`}>
-                      {formatPracticalAdjustment(practicalAdjustment)}
+                    {/* Final practical score with its net adjustment */}
+                    <td className="px-4 py-3.5 font-mono font-bold whitespace-nowrap">
+                      <span className="text-slate-900">
+                        {formatScore(item.practicalBreakdown.practicalScore)}
+                      </span>
+                      <span className={`ml-1.5 ${
+                        practicalAdjustmentTextClass(practicalAdjustment)
+                      }`}>
+                        ({formatPracticalAdjustment(practicalAdjustment)})
+                      </span>
                     </td>
 
                     {/* 6 Domains Score Columns */}

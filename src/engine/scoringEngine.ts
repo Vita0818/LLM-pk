@@ -1084,9 +1084,9 @@ export function processLLMpkBatchScoring(
 
       speedUtility = 0.5 * uThroughput + 0.5 * uTtft;
       if (speedUtility >= 0) {
-        speedDelta = 3 * speedUtility;
+        speedDelta = SCORING_CONFIG.practicalAdjustment.speed.rewardScale * speedUtility;
       } else {
-        speedDelta = 5 * speedUtility;
+        speedDelta = SCORING_CONFIG.practicalAdjustment.speed.penaltyScale * speedUtility;
       }
     }
 
@@ -1102,9 +1102,9 @@ export function processLLMpkBatchScoring(
       costUtility = calculateUtilityRatio(r_c);
 
       if (costUtility >= 0) {
-        costDelta = 3 * costUtility;
+        costDelta = SCORING_CONFIG.practicalAdjustment.cost.rewardScale * costUtility;
       } else {
-        costDelta = 7 * costUtility;
+        costDelta = SCORING_CONFIG.practicalAdjustment.cost.penaltyScale * costUtility;
       }
     }
 

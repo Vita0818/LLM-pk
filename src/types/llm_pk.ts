@@ -173,8 +173,8 @@ export interface DomainScoreDetail {
 export interface PracticalScoreBreakdown {
   /** Direct geometric mean of the available normalized domain scores. */
   rawCapabilityScore: number | null;
-  speedDelta: number | null; // [-5, +3], null without source-backed speed data
-  costDelta: number | null;  // [-7, +3], null without source-backed cost data
+  speedDelta: number | null; // (-6, +4), null without source-backed speed data
+  costDelta: number | null;  // (-9, +4), null without source-backed cost data
   practicalScore: number | null;
   speedUtility: number | null;
   costUtility: number | null;
