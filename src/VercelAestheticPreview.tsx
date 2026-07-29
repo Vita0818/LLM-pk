@@ -310,22 +310,28 @@ export const VercelAestheticPreview: React.FC = () => {
                           )}
                         </td>
 
-                        {/* Model Configuration 3-Part Name */}
+                        {/* Model Configuration 3-Part Name: Stacked 3 Lines on Mobile */}
                         <td className="px-2 sm:px-5 py-3 sm:py-3.5 font-brand-mono min-w-0">
                           <div className="space-y-0.5 sm:space-y-1">
                             <div className="font-extrabold text-neutral-950 text-xs sm:text-base group-hover:text-purple-900 transition-colors leading-tight">
                               {parsed.model}
                             </div>
-                            <div className="flex items-center gap-1 font-bold text-neutral-600 text-[11px] sm:text-[15px] truncate">
+                            {/* Desktop: Harness | Provider on single line */}
+                            <div className="hidden sm:flex items-center gap-1 font-bold text-neutral-600 text-[15px] truncate">
                               <span className="truncate">{parsed.harness}</span>
                               <span className="text-neutral-300 font-normal shrink-0">|</span>
                               <span className="truncate">{parsed.provider}</span>
                             </div>
+                            {/* Mobile: 2 Separate Stacked Lines for Harness & Provider (Total 3 Lines) */}
+                            <div className="sm:hidden space-y-0.5 text-[11px]">
+                              <div className="font-bold text-neutral-700 truncate">{parsed.harness}</div>
+                              <div className="font-medium text-neutral-500 truncate">{parsed.provider}</div>
+                            </div>
                           </div>
                         </td>
 
-                        {/* Merged Intelligence & Practical Score Column: Stacked Multi-line on Mobile */}
-                        <td className="px-2 sm:px-5 py-3 sm:py-3.5 text-right sm:text-center font-brand-mono shrink-0">
+                        {/* Merged Intelligence & Practical Score Column: Pulled slightly closer inward */}
+                        <td className="pl-1 pr-3 sm:px-5 py-3 sm:py-3.5 text-right sm:text-center font-brand-mono shrink-0">
                           <div className="flex flex-col items-end sm:items-center">
                             {/* Line 1: Main Intelligence Score */}
                             <div className="font-black text-black text-sm sm:text-xl leading-none">
