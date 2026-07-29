@@ -77,9 +77,9 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   const rings = [20, 40, 60, 80, 100];
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="overflow-visible">
+    <div className="flex flex-col items-center justify-center w-full">
+      <div className="relative w-full max-w-[680px] aspect-square flex items-center justify-center" style={{ maxWidth: size }}>
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full overflow-visible">
           {/* Background Grid Rings */}
           {rings.map((ringValue) => {
             const points = DOMAIN_ORDER.map((_, idx) => {

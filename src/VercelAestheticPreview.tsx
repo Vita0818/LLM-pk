@@ -253,22 +253,22 @@ export const VercelAestheticPreview: React.FC = () => {
                     <th className="px-5 py-3.5 text-center font-bold text-black">
                       {renderSortLabel('Intelligence & Practical Score', 'practicalScore')}
                     </th>
-                    <th className="px-3.5 py-3.5 text-center font-bold text-purple-900 border-l border-neutral-200">
+                    <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-purple-900 border-l border-neutral-200">
                       {renderSortLabel('Chatting', 'chatting')}
                     </th>
-                    <th className="px-3.5 py-3.5 text-center font-bold text-amber-900">
+                    <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-amber-900">
                       {renderSortLabel('Math & Sci', 'math_science')}
                     </th>
-                    <th className="px-3.5 py-3.5 text-center font-bold text-emerald-900">
+                    <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-emerald-900">
                       {renderSortLabel('Coding', 'coding')}
                     </th>
-                    <th className="px-3.5 py-3.5 text-center font-bold text-amber-900">
+                    <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-amber-900">
                       {renderSortLabel('Engineering', 'engineering')}
                     </th>
-                    <th className="px-3.5 py-3.5 text-center font-bold text-blue-900">
+                    <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-blue-900">
                       {renderSortLabel('Agentic', 'agentic_work')}
                     </th>
-                    <th className="px-3.5 py-3.5 text-center font-bold text-cyan-900">
+                    <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-cyan-900">
                       {renderSortLabel('Search', 'search_knowledge')}
                     </th>
                     <th className="px-4 py-3.5 text-right"></th>
@@ -341,7 +341,7 @@ export const VercelAestheticPreview: React.FC = () => {
                           </span>
                         </td>
 
-                        {/* 6 Domains Scores with Dynamic Score-Based Depth (100 is darkest, lower is lighter down to 0.45 floor) */}
+                        {/* 6 Domains Scores with Dynamic Score-Based Depth (Hidden on Mobile) */}
                         {domainList.map((dId, dIdx) => {
                           const score = item.domainScores[dId].score;
                           const def = DOMAIN_DEFINITIONS[dId];
@@ -350,7 +350,7 @@ export const VercelAestheticPreview: React.FC = () => {
                           return (
                             <td
                               key={dId}
-                              className={`px-3.5 py-4 text-center font-brand-mono text-base ${dIdx === 0 ? 'border-l border-neutral-100' : ''}`}
+                              className={`hidden md:table-cell px-3.5 py-4 text-center font-brand-mono text-base ${dIdx === 0 ? 'border-l border-neutral-100' : ''}`}
                               style={{
                                 color: def.color,
                                 opacity,
@@ -447,8 +447,8 @@ export const VercelAestheticPreview: React.FC = () => {
                 />
               </div>
 
-              {/* Atomic & Practical Metrics List - 2 Column Layout shifted upwards */}
-              <div className="lg:col-span-5 pl-0 lg:pl-2 -mt-4 sm:-mt-6 lg:-mt-8">
+              {/* Atomic & Practical Metrics List - Stacked cleanly on mobile, side-by-side on desktop */}
+              <div className="lg:col-span-5 pl-0 lg:pl-2 mt-4 lg:-mt-8">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 font-brand-mono text-xs sm:text-sm">
                   {/* 1. Capability & Detail Metrics grouped strictly by Domain Order */}
                   {(['chatting', 'math_science', 'coding', 'engineering', 'agentic_work', 'search_knowledge'] as string[]).flatMap((dId: string) => {
