@@ -248,9 +248,9 @@ export const VercelAestheticPreview: React.FC = () => {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="text-neutral-600 font-brand-mono text-[10px] sm:text-[11px] border-b border-neutral-200 bg-neutral-50/70 uppercase tracking-wider">
-                    <th className="px-2 sm:px-4 py-3 text-center w-8 sm:w-12 font-bold">#</th>
-                    <th className="px-3 sm:px-5 py-3 font-bold">Model Configuration</th>
-                    <th className="px-3 sm:px-5 py-3 text-right sm:text-center font-bold text-black">
+                    <th className="px-2 sm:px-4 py-3 text-center w-7 sm:w-12 font-bold shrink-0">#</th>
+                    <th className="px-2.5 sm:px-5 py-3 font-bold">Model Configuration</th>
+                    <th className="px-2.5 sm:px-5 py-3 text-right sm:text-center font-bold text-black whitespace-nowrap w-[135px] sm:w-auto">
                       {renderSortLabel('Intelligence & Practical', 'practicalScore')}
                     </th>
                     <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-purple-900 border-l border-neutral-200">
@@ -271,7 +271,7 @@ export const VercelAestheticPreview: React.FC = () => {
                     <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-cyan-900">
                       {renderSortLabel('Search', 'search_knowledge')}
                     </th>
-                    <th className="px-2 sm:px-4 py-3 text-right w-8 sm:w-12"></th>
+                    <th className="px-2 sm:px-4 py-3 text-right w-7 sm:w-12 shrink-0"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100 font-sans text-neutral-900">
@@ -295,7 +295,7 @@ export const VercelAestheticPreview: React.FC = () => {
                         className="hover:bg-neutral-50/90 transition-colors duration-100 cursor-pointer group"
                       >
                         {/* Rank Badge */}
-                        <td className="px-2 sm:px-4 py-3 sm:py-4 text-center font-brand-mono font-bold text-neutral-500">
+                        <td className="px-2 sm:px-4 py-3 sm:py-3.5 text-center font-brand-mono font-bold text-neutral-500">
                           {rank === 1 ? (
                             <span className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-900 text-white text-[11px] sm:text-xs font-black shadow-2xs">1</span>
                           ) : rank === 2 ? (
@@ -310,24 +310,24 @@ export const VercelAestheticPreview: React.FC = () => {
                         </td>
 
                         {/* Model Configuration 3-Part Name */}
-                        <td className="px-2.5 sm:px-5 py-3 sm:py-4 font-brand-mono">
+                        <td className="px-2.5 sm:px-5 py-3 sm:py-3.5 font-brand-mono min-w-0">
                           <div className="space-y-0.5 sm:space-y-1">
-                            <div className="font-extrabold text-neutral-950 text-sm sm:text-base group-hover:text-purple-900 transition-colors leading-tight">
+                            <div className="font-extrabold text-neutral-950 text-xs sm:text-base group-hover:text-purple-900 transition-colors leading-tight">
                               {parsed.model}
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-bold text-neutral-700 text-xs sm:text-[15px]">
-                              <span>{parsed.harness}</span>
-                              <span className="text-neutral-300 font-normal">|</span>
-                              <span>{parsed.provider}</span>
+                            <div className="flex items-center gap-1 font-bold text-neutral-600 text-[11px] sm:text-[15px] truncate">
+                              <span className="truncate">{parsed.harness}</span>
+                              <span className="text-neutral-300 font-normal shrink-0">|</span>
+                              <span className="truncate">{parsed.provider}</span>
                             </div>
                           </div>
                         </td>
 
-                        {/* Merged Intelligence & Practical Score Column: Stacked Multi-line on Mobile! */}
-                        <td className="px-2.5 sm:px-5 py-3 sm:py-4 text-right sm:text-center font-brand-mono">
+                        {/* Merged Intelligence & Practical Score Column: Stacked Multi-line on Mobile */}
+                        <td className="px-2.5 sm:px-5 py-3 sm:py-3.5 text-right sm:text-center font-brand-mono w-[135px] sm:w-auto shrink-0">
                           <div className="flex flex-col items-end sm:items-center">
                             {/* Line 1: Main Intelligence Score */}
-                            <div className="font-black text-black text-base sm:text-xl leading-none">
+                            <div className="font-black text-black text-sm sm:text-xl leading-none">
                               {formatScore(capabilityScore)}
                             </div>
                             {/* Line 2: Practical Score Adjustment & Final Score */}
