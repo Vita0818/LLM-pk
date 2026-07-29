@@ -244,14 +244,14 @@ export const VercelAestheticPreview: React.FC = () => {
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
             {/* High-Density Authentic Table */}
-            <div className="w-full overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+            <div className="w-full overflow-hidden rounded-xl border border-neutral-200 bg-white">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="text-neutral-600 font-brand-mono text-[11px] border-b border-neutral-200 bg-neutral-50/70 uppercase tracking-wider">
-                    <th className="px-4 py-3.5 text-center w-12 font-bold">#</th>
-                    <th className="px-5 py-3.5 font-bold">Model Configuration (Model | Harness | Provider)</th>
-                    <th className="px-5 py-3.5 text-center font-bold text-black">
-                      {renderSortLabel('Intelligence & Practical Score', 'practicalScore')}
+                  <tr className="text-neutral-600 font-brand-mono text-[10px] sm:text-[11px] border-b border-neutral-200 bg-neutral-50/70 uppercase tracking-wider">
+                    <th className="px-2 sm:px-4 py-3 text-center w-8 sm:w-12 font-bold">#</th>
+                    <th className="px-3 sm:px-5 py-3 font-bold">Model Configuration</th>
+                    <th className="px-3 sm:px-5 py-3 text-right sm:text-center font-bold text-black">
+                      {renderSortLabel('Intelligence & Practical', 'practicalScore')}
                     </th>
                     <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-purple-900 border-l border-neutral-200">
                       {renderSortLabel('Chatting', 'chatting')}
@@ -271,7 +271,7 @@ export const VercelAestheticPreview: React.FC = () => {
                     <th className="hidden md:table-cell px-3.5 py-3.5 text-center font-bold text-cyan-900">
                       {renderSortLabel('Search', 'search_knowledge')}
                     </th>
-                    <th className="px-4 py-3.5 text-right"></th>
+                    <th className="px-2 sm:px-4 py-3 text-right w-8 sm:w-12"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100 font-sans text-neutral-900">
@@ -295,13 +295,13 @@ export const VercelAestheticPreview: React.FC = () => {
                         className="hover:bg-neutral-50/90 transition-colors duration-100 cursor-pointer group"
                       >
                         {/* Rank Badge */}
-                        <td className="px-4 py-4 text-center font-brand-mono font-bold text-neutral-500">
+                        <td className="px-2 sm:px-4 py-3 sm:py-4 text-center font-brand-mono font-bold text-neutral-500">
                           {rank === 1 ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-900 text-white text-xs font-black shadow-2xs">1</span>
+                            <span className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-purple-900 text-white text-[11px] sm:text-xs font-black shadow-2xs">1</span>
                           ) : rank === 2 ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-neutral-200 text-neutral-900 text-xs font-bold">2</span>
+                            <span className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-neutral-200 text-neutral-900 text-[11px] sm:text-xs font-bold">2</span>
                           ) : rank === 3 ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-neutral-100 text-neutral-800 border border-neutral-300 text-xs font-bold">3</span>
+                            <span className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-neutral-100 text-neutral-800 border border-neutral-300 text-[11px] sm:text-xs font-bold">3</span>
                           ) : rank !== null ? (
                             rank
                           ) : (
@@ -309,13 +309,13 @@ export const VercelAestheticPreview: React.FC = () => {
                           )}
                         </td>
 
-                        {/* Model Configuration 3-Part Name - Slightly Enlarged */}
-                        <td className="px-5 py-4 font-brand-mono">
-                          <div className="space-y-1">
-                            <div className="font-extrabold text-neutral-950 text-base group-hover:text-purple-900 transition-colors">
+                        {/* Model Configuration 3-Part Name */}
+                        <td className="px-2.5 sm:px-5 py-3 sm:py-4 font-brand-mono">
+                          <div className="space-y-0.5 sm:space-y-1">
+                            <div className="font-extrabold text-neutral-950 text-sm sm:text-base group-hover:text-purple-900 transition-colors leading-tight">
                               {parsed.model}
                             </div>
-                            <div className="flex items-center gap-1.5 font-bold text-neutral-800 text-[15px]">
+                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-bold text-neutral-700 text-xs sm:text-[15px]">
                               <span>{parsed.harness}</span>
                               <span className="text-neutral-300 font-normal">|</span>
                               <span>{parsed.provider}</span>
@@ -323,11 +323,15 @@ export const VercelAestheticPreview: React.FC = () => {
                           </div>
                         </td>
 
-                        {/* Merged Intelligence & Practical Score Column: e.g. 92.0 (-8.8 -> 83.2) */}
-                        <td className="px-5 py-4 text-center font-brand-mono whitespace-nowrap">
-                          <span className="font-brand-mono text-base sm:text-lg text-neutral-950 font-bold">
-                            <span className="font-black text-black text-lg sm:text-xl">{formatScore(capabilityScore)}</span>
-                            <span className="text-neutral-500 font-medium ml-1.5 text-base sm:text-lg">
+                        {/* Merged Intelligence & Practical Score Column: Stacked Multi-line on Mobile! */}
+                        <td className="px-2.5 sm:px-5 py-3 sm:py-4 text-right sm:text-center font-brand-mono">
+                          <div className="flex flex-col items-end sm:items-center">
+                            {/* Line 1: Main Intelligence Score */}
+                            <div className="font-black text-black text-base sm:text-xl leading-none">
+                              {formatScore(capabilityScore)}
+                            </div>
+                            {/* Line 2: Practical Score Adjustment & Final Score */}
+                            <div className="text-[10px] sm:text-sm text-neutral-500 font-medium whitespace-nowrap mt-1">
                               (
                               <span className={`font-bold ${practicalAdjustmentTextClass(practicalAdjustment)}`}>
                                 {formatPracticalAdjustment(practicalAdjustment)}
@@ -337,8 +341,8 @@ export const VercelAestheticPreview: React.FC = () => {
                                 {formatScore(item.practicalBreakdown.practicalScore)}
                               </span>
                               )
-                            </span>
-                          </span>
+                            </div>
+                          </div>
                         </td>
 
                         {/* 6 Domains Scores with Dynamic Score-Based Depth (Hidden on Mobile) */}
@@ -363,9 +367,9 @@ export const VercelAestheticPreview: React.FC = () => {
                         })}
 
                         {/* Arrow Action */}
-                        <td className="px-4 py-4 text-right">
-                          <div className="w-7 h-7 rounded-full bg-neutral-100 group-hover:bg-black flex items-center justify-center transition-colors ml-auto">
-                            <ArrowUpRight className="w-3.5 h-3.5 text-neutral-600 group-hover:text-white transition-colors" />
+                        <td className="px-2 sm:px-4 py-3 sm:py-4 text-right">
+                          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-neutral-100 group-hover:bg-black flex items-center justify-center transition-colors ml-auto shrink-0">
+                            <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-neutral-600 group-hover:text-white transition-colors" />
                           </div>
                         </td>
                       </tr>
