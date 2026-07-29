@@ -1,0 +1,888 @@
+{
+  "schemaVersion": "source-profile-aliases/v1",
+  "matchPolicy": "explicit-card-id-only",
+  "description": "Reviewed cross-source aliases. A group means the listed source cards describe the same published model profile; route, reasoning mode, dated revision, search, Fast, Pro, and harness distinctions remain separate unless the exact cards are listed together.",
+  "groups": [
+    {
+      "canonicalProfileKey": "gpt-3-5-turbo-0613",
+      "evidence": "Same OpenAI 0613 snapshot; OpenRouter adds only the label 'older v0613'.",
+      "cardIds": [
+        "card-aa-gpt-3-5-turbo-0613",
+        "card-openrouter-openai-gpt-3-5-turbo-0613"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-4-1-2025-04-14",
+      "evidence": "GPT-4.1 launch snapshot; Arena publishes the dated API model ID.",
+      "cardIds": [
+        "card-aa-gpt-4-1",
+        "card-arena-gpt-4-1-2025-04-14",
+        "card-openrouter-openai-gpt-4-1"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-4-1-mini-2025-04-14",
+      "evidence": "GPT-4.1 Mini launch snapshot; Arena publishes the dated API model ID.",
+      "cardIds": [
+        "card-aa-gpt-4-1-mini",
+        "card-arena-gpt-4-1-mini-2025-04-14",
+        "card-openrouter-openai-gpt-4-1-mini"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-4-1-nano-2025-04-14",
+      "evidence": "GPT-4.1 Nano launch snapshot; Arena publishes the dated API model ID.",
+      "cardIds": [
+        "card-aa-gpt-4-1-nano",
+        "card-arena-gpt-4-1-nano-2025-04-14",
+        "card-openrouter-openai-gpt-4-1-nano"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-4-5-preview-2025-02-27",
+      "evidence": "Same GPT-4.5 Preview release; Arena retains the release date.",
+      "cardIds": [
+        "card-aa-gpt-4-5",
+        "card-arena-gpt-4-5-preview-2025-02-27"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-4o-2024-05-13",
+      "evidence": "Artificial Analysis month label resolves to the dated OpenAI snapshot.",
+      "cardIds": [
+        "card-aa-gpt-4o-2024-05-13",
+        "card-arena-gpt-4o-2024-05-13",
+        "card-openrouter-openai-gpt-4o-2024-05-13"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-4o-2024-08-06",
+      "evidence": "Artificial Analysis month label resolves to the dated OpenAI snapshot.",
+      "cardIds": [
+        "card-aa-gpt-4o-2024-08-06",
+        "card-arena-gpt-4o-2024-08-06",
+        "card-openrouter-openai-gpt-4o-2024-08-06"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-4o-2024-11-20",
+      "evidence": "Artificial Analysis month label resolves to the dated OpenAI snapshot.",
+      "cardIds": [
+        "card-aa-gpt-4o",
+        "card-openrouter-openai-gpt-4o-2024-11-20"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-4o-mini-2024-07-18",
+      "evidence": "GPT-4o mini launch snapshot; Arena and OpenRouter retain the exact date.",
+      "cardIds": [
+        "card-aa-gpt-4o-mini",
+        "card-arena-gpt-4o-mini-2024-07-18",
+        "card-openrouter-openai-gpt-4o-mini-2024-07-18"
+      ]
+    },
+    {
+      "canonicalProfileKey": "o1-2024-12-17",
+      "evidence": "Same o1 release; Arena retains the dated API model ID.",
+      "cardIds": [
+        "card-aa-o1",
+        "card-arena-o1-2024-12-17",
+        "card-openrouter-openai-o1"
+      ]
+    },
+    {
+      "canonicalProfileKey": "o3-2025-04-16",
+      "evidence": "Same o3 release; Arena retains the dated API model ID.",
+      "cardIds": [
+        "card-aa-o3",
+        "card-arena-o3-2025-04-16",
+        "card-openrouter-openai-o3"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-3-haiku-20240307",
+      "evidence": "Same Claude 3 Haiku release; Arena retains Anthropic's dated model ID.",
+      "cardIds": [
+        "card-aa-claude-3-haiku",
+        "card-arena-claude-3-haiku-20240307",
+        "card-openrouter-anthropic-claude-3-haiku"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-3-opus-20240229",
+      "evidence": "Same Claude 3 Opus release; Arena retains Anthropic's dated model ID.",
+      "cardIds": [
+        "card-aa-claude-3-opus",
+        "card-arena-claude-3-opus-20240229"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-3-sonnet-20240229",
+      "evidence": "Same Claude 3 Sonnet release; Arena retains Anthropic's dated model ID.",
+      "cardIds": [
+        "card-aa-claude-3-sonnet",
+        "card-arena-claude-3-sonnet-20240229"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-3-5-haiku-20241022",
+      "evidence": "Same Claude 3.5 Haiku release; Arena retains Anthropic's dated model ID.",
+      "cardIds": [
+        "card-aa-claude-3-5-haiku",
+        "card-arena-claude-3-5-haiku-20241022"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-3-5-sonnet-20240620",
+      "evidence": "Artificial Analysis June 2024 label resolves to Anthropic's dated model ID.",
+      "cardIds": [
+        "card-aa-claude-35-sonnet-june-24",
+        "card-arena-claude-3-5-sonnet-20240620"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-3-5-sonnet-20241022",
+      "evidence": "Artificial Analysis October 2024 label resolves to Anthropic's dated model ID.",
+      "cardIds": [
+        "card-aa-claude-35-sonnet",
+        "card-arena-claude-3-5-sonnet-20241022"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-3-7-sonnet-20250219-none",
+      "evidence": "Arena's base dated row is the non-thinking profile; the separate thinking-budget row is not included.",
+      "cardIds": [
+        "card-aa-claude-3-7-sonnet",
+        "card-arena-claude-3-7-sonnet-20250219"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-opus-4-20250514-none",
+      "evidence": "Arena's base dated row is the non-thinking profile; the 16k thinking row remains separate.",
+      "cardIds": [
+        "card-aa-claude-4-opus",
+        "card-arena-claude-opus-4-20250514"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-sonnet-4-20250514-none",
+      "evidence": "Arena's base dated row is the non-thinking profile; the 32k thinking row remains separate.",
+      "cardIds": [
+        "card-aa-claude-4-sonnet",
+        "card-arena-claude-sonnet-4-20250514"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-opus-4-1-20250805-none",
+      "evidence": "Arena's base dated row is the non-thinking profile; the 16k thinking row remains separate.",
+      "cardIds": [
+        "card-aa-claude-4-1-opus",
+        "card-arena-claude-opus-4-1-20250805"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-haiku-4-5-20251001-none",
+      "evidence": "Arena's base dated row is the non-thinking profile; reasoning remains a separate card.",
+      "cardIds": [
+        "card-aa-claude-4-5-haiku",
+        "card-arena-claude-haiku-4-5-20251001"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-sonnet-4-5-20250929-none",
+      "evidence": "Arena's base dated row is the non-thinking profile; the 32k thinking and search rows remain separate.",
+      "cardIds": [
+        "card-aa-claude-4-5-sonnet",
+        "card-arena-claude-sonnet-4-5-20250929"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-1-5-flash-001",
+      "evidence": "Artificial Analysis May 2024 label corresponds to Google's 001 revision.",
+      "cardIds": [
+        "card-aa-gemini-1-5-flash-may-2024",
+        "card-arena-gemini-1-5-flash-001"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-1-5-flash-002",
+      "evidence": "Artificial Analysis September 2024 label corresponds to Google's 002 revision.",
+      "cardIds": [
+        "card-aa-gemini-1-5-flash",
+        "card-arena-gemini-1-5-flash-002"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-1-5-flash-8b-001",
+      "evidence": "Same Gemini 1.5 Flash-8B 001 release.",
+      "cardIds": [
+        "card-aa-gemini-1-5-flash-8b",
+        "card-arena-gemini-1-5-flash-8b-001"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-1-5-pro-001",
+      "evidence": "Artificial Analysis May 2024 label corresponds to Google's 001 revision.",
+      "cardIds": [
+        "card-aa-gemini-1-5-pro-may-2024",
+        "card-arena-gemini-1-5-pro-001"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-1-5-pro-002",
+      "evidence": "Artificial Analysis September 2024 label corresponds to Google's 002 revision.",
+      "cardIds": [
+        "card-aa-gemini-1-5-pro",
+        "card-arena-gemini-1-5-pro-002"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-2-0-flash-001",
+      "evidence": "Artificial Analysis February 2025 label corresponds to Google's stable 001 revision.",
+      "cardIds": [
+        "card-aa-gemini-2-0-flash",
+        "card-arena-gemini-2-0-flash-001"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-2-0-flash-lite-preview-02-05",
+      "evidence": "Same Gemini 2.0 Flash-Lite preview dated 02-05.",
+      "cardIds": [
+        "card-aa-gemini-2-0-flash-lite-preview",
+        "card-arena-gemini-2-0-flash-lite-preview-02-05"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-r1-2025-01",
+      "evidence": "Same original DeepSeek R1 January 2025 release; 0528 remains separate.",
+      "cardIds": [
+        "card-aa-deepseek-r1-0120",
+        "card-arena-deepseek-r1",
+        "card-openrouter-deepseek-deepseek-r1"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-r1-0528",
+      "evidence": "Same explicitly named DeepSeek R1 0528 revision.",
+      "cardIds": [
+        "card-aa-deepseek-r1",
+        "card-arena-deepseek-r1-0528",
+        "card-openrouter-deepseek-deepseek-r1-0528"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-r1-distill-llama-70b",
+      "evidence": "OpenRouter omits the leading vendor name after its provider prefix; model and size are identical.",
+      "cardIds": [
+        "card-aa-deepseek-r1-distill-llama-70b",
+        "card-openrouter-deepseek-deepseek-r1-distill-llama-70b"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-v3-1-none",
+      "evidence": "Arena's base row is the non-thinking profile; thinking and OpenRouter's configurable base route remain separate.",
+      "cardIds": [
+        "card-aa-deepseek-v3-1",
+        "card-arena-deepseek-v3-1"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-v3-1-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and Arena 'Thinking' name the same explicit mode.",
+      "cardIds": [
+        "card-aa-deepseek-v3-1-reasoning",
+        "card-arena-deepseek-v3-1-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-v3-1-terminus-none",
+      "evidence": "Arena's base Terminus row is the non-thinking profile; thinking remains separate.",
+      "cardIds": [
+        "card-aa-deepseek-v3-1-terminus",
+        "card-arena-deepseek-v3-1-terminus"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-v3-1-terminus-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and Arena 'Thinking' name the same explicit Terminus mode.",
+      "cardIds": [
+        "card-aa-deepseek-v3-1-terminus-reasoning",
+        "card-arena-deepseek-v3-1-terminus-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-v3-2-none",
+      "evidence": "Arena's base V3.2 row is the non-thinking profile; thinking and OpenRouter's configurable base route remain separate.",
+      "cardIds": [
+        "card-aa-deepseek-v3-2",
+        "card-arena-deepseek-v3-2"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-v3-2-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and Arena 'Thinking' name the same explicit mode.",
+      "cardIds": [
+        "card-aa-deepseek-v3-2-reasoning",
+        "card-arena-deepseek-v3-2-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-v3-2-exp-none",
+      "evidence": "Arena's base V3.2 Exp row is the non-thinking profile; thinking remains separate.",
+      "cardIds": [
+        "card-aa-deepseek-v3-2-0925",
+        "card-arena-deepseek-v3-2-exp"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-v3-2-exp-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and Arena 'Thinking' name the same explicit experimental mode.",
+      "cardIds": [
+        "card-aa-deepseek-v3-2-reasoning-0925",
+        "card-arena-deepseek-v3-2-exp-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "kimi-k2-0711",
+      "evidence": "Same Kimi K2 0711 release; Arena retains its preview suffix.",
+      "cardIds": [
+        "card-aa-kimi-k2",
+        "card-arena-kimi-k2-0711-preview",
+        "card-openrouter-moonshotai-kimi-k2"
+      ]
+    },
+    {
+      "canonicalProfileKey": "kimi-k2-0905",
+      "evidence": "Same explicitly named Kimi K2 0905 revision; Arena retains its preview suffix.",
+      "cardIds": [
+        "card-aa-kimi-k2-0905",
+        "card-arena-kimi-k2-0905-preview",
+        "card-openrouter-moonshotai-kimi-k2-0905"
+      ]
+    },
+    {
+      "canonicalProfileKey": "kimi-k2-thinking",
+      "evidence": "Same explicitly named Kimi K2 Thinking route; Arena's separate Thinking Turbo row is excluded.",
+      "cardIds": [
+        "card-aa-kimi-k2-thinking",
+        "card-openrouter-moonshotai-kimi-k2-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "kimi-k2-5-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and Arena 'Thinking' name the same K2.5 mode; Instant and base routes are excluded.",
+      "cardIds": [
+        "card-aa-kimi-k2-5",
+        "card-arena-kimi-k2-5-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "mimo-v2-flash-none",
+      "evidence": "Artificial Analysis 'Non-reasoning' and Arena 'non-thinking' name the same explicit mode.",
+      "cardIds": [
+        "card-aa-mimo-v2-flash",
+        "card-arena-mimo-v2-flash-non-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "mimo-v2-flash-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and Arena 'thinking' name the same explicit mode.",
+      "cardIds": [
+        "card-aa-mimo-v2-flash-reasoning",
+        "card-arena-mimo-v2-flash-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-235b-a22b-none",
+      "evidence": "Artificial Analysis 'Non-reasoning' and Arena 'no-thinking' name the same explicit mode.",
+      "cardIds": [
+        "card-aa-qwen3-235b-a22b-instruct",
+        "card-arena-qwen3-235b-a22b-no-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-235b-a22b-instruct-2507",
+      "evidence": "Same Qwen3 2507 instruct revision; only token order differs.",
+      "cardIds": [
+        "card-aa-qwen3-235b-a22b-instruct-2507",
+        "card-arena-qwen3-235b-a22b-instruct-2507",
+        "card-openrouter-qwen-qwen3-235b-a22b-2507"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-235b-a22b-thinking-2507",
+      "evidence": "Same Qwen3 2507 reasoning/thinking revision; only wording and token order differ.",
+      "cardIds": [
+        "card-aa-qwen3-235b-a22b-instruct-2507-reasoning",
+        "card-arena-qwen3-235b-a22b-thinking-2507",
+        "card-openrouter-qwen-qwen3-235b-a22b-thinking-2507"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-30b-a3b-instruct-2507",
+      "evidence": "Same Qwen3 2507 instruct revision; only token order differs.",
+      "cardIds": [
+        "card-aa-qwen3-30b-a3b-2507",
+        "card-arena-qwen3-30b-a3b-instruct-2507",
+        "card-openrouter-qwen-qwen3-30b-a3b-instruct-2507"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-30b-a3b-thinking-2507",
+      "evidence": "Same Qwen3 2507 reasoning/thinking revision; only wording and token order differ.",
+      "cardIds": [
+        "card-aa-qwen3-30b-a3b-2507-reasoning",
+        "card-openrouter-qwen-qwen3-30b-a3b-thinking-2507"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-next-80b-a3b-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and the other sources' 'Thinking' name the same explicit mode.",
+      "cardIds": [
+        "card-aa-qwen3-next-80b-a3b-reasoning",
+        "card-arena-qwen3-next-80b-a3b-thinking",
+        "card-openrouter-qwen-qwen3-next-80b-a3b-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-vl-235b-a22b-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and the other sources' 'Thinking' name the same explicit VL mode.",
+      "cardIds": [
+        "card-aa-qwen3-vl-235b-a22b-reasoning",
+        "card-arena-qwen3-vl-235b-a22b-thinking",
+        "card-openrouter-qwen-qwen3-vl-235b-a22b-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-vl-30b-a3b-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and OpenRouter 'Thinking' name the same explicit VL mode.",
+      "cardIds": [
+        "card-aa-qwen3-vl-30b-a3b-reasoning",
+        "card-openrouter-qwen-qwen3-vl-30b-a3b-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-vl-8b-thinking",
+      "evidence": "Artificial Analysis 'Reasoning' and OpenRouter 'Thinking' name the same explicit VL mode.",
+      "cardIds": [
+        "card-aa-qwen3-vl-8b-reasoning",
+        "card-openrouter-qwen-qwen3-vl-8b-thinking"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen2-5-72b-instruct",
+      "evidence": "Same Qwen2.5 72B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-qwen2-5-72b-instruct",
+        "card-arena-qwen2-5-72b-instruct",
+        "card-openrouter-qwen-qwen-2-5-72b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen2-5-coder-32b-instruct",
+      "evidence": "Same Qwen2.5 Coder 32B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-qwen2-5-coder-32b-instruct",
+        "card-arena-qwen2-5-coder-32b-instruct",
+        "card-openrouter-qwen-qwen-2-5-coder-32b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-2-7b-chat",
+      "evidence": "Same Llama 2 7B Chat model; only size/Chat token order differs.",
+      "cardIds": [
+        "card-aa-llama-2-chat-7b",
+        "card-arena-llama-2-7b-chat"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-2-13b-chat",
+      "evidence": "Same Llama 2 13B Chat model; only size/Chat token order differs.",
+      "cardIds": [
+        "card-aa-llama-2-chat-13b",
+        "card-arena-llama-2-13b-chat"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-2-70b-chat",
+      "evidence": "Same Llama 2 70B Chat model; only size/Chat token order differs.",
+      "cardIds": [
+        "card-aa-llama-2-chat-70b",
+        "card-arena-llama-2-70b-chat"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-3-8b-instruct",
+      "evidence": "Same Llama 3 8B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-llama-3-instruct-8b",
+        "card-arena-llama-3-8b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-3-70b-instruct",
+      "evidence": "Same Llama 3 70B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-llama-3-instruct-70b",
+        "card-arena-llama-3-70b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-3-1-8b-instruct",
+      "evidence": "Same Llama 3.1 8B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-llama-3-1-instruct-8b",
+        "card-arena-llama-3-1-8b-instruct",
+        "card-openrouter-meta-llama-llama-3-1-8b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-3-1-70b-instruct",
+      "evidence": "Same Llama 3.1 70B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-llama-3-1-instruct-70b",
+        "card-arena-llama-3-1-70b-instruct",
+        "card-openrouter-meta-llama-llama-3-1-70b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-3-2-1b-instruct",
+      "evidence": "Same Llama 3.2 1B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-llama-3-2-instruct-1b",
+        "card-arena-llama-3-2-1b-instruct",
+        "card-openrouter-meta-llama-llama-3-2-1b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-3-2-3b-instruct",
+      "evidence": "Same Llama 3.2 3B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-llama-3-2-instruct-3b",
+        "card-arena-llama-3-2-3b-instruct",
+        "card-openrouter-meta-llama-llama-3-2-3b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-3-3-70b-instruct",
+      "evidence": "Same Llama 3.3 70B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-llama-3-3-instruct-70b",
+        "card-arena-llama-3-3-70b-instruct",
+        "card-openrouter-meta-llama-llama-3-3-70b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "llama-3-1-nemotron-70b-instruct",
+      "evidence": "Same Llama 3.1 Nemotron 70B Instruct model; only size/Instruct token order differs.",
+      "cardIds": [
+        "card-aa-llama-3-1-nemotron-instruct-70b",
+        "card-arena-llama-3-1-nemotron-70b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-3-1-flash-lite-preview",
+      "evidence": "Both records are the preview build; Artificial Analysis exposes Preview in the source slug while omitting it from the display label. The stable OpenRouter card is excluded.",
+      "cardIds": [
+        "card-aa-gemini-3-1-flash-lite-preview",
+        "card-arena-gemini-3-1-flash-lite-preview"
+      ]
+    },
+    {
+      "canonicalProfileKey": "grok-3-mini-high",
+      "evidence": "Artificial Analysis Reasoning high and Arena's explicit high row describe the same Grok 3 mini profile.",
+      "cardIds": [
+        "card-aa-grok-3-mini-reasoning",
+        "card-arena-grok-3-mini-high"
+      ]
+    },
+    {
+      "canonicalProfileKey": "grok-4-20-0309-reasoning",
+      "evidence": "Same Grok 4.20 0309 reasoning beta; Arena retains the beta token in its row ID.",
+      "cardIds": [
+        "card-aa-grok-4-20-0309",
+        "card-arena-grok-4-20-beta-0309-reasoning"
+      ]
+    },
+    {
+      "canonicalProfileKey": "grok-4-fast-none",
+      "evidence": "Arena's explicit chat profile is the non-reasoning Grok 4 Fast route; reasoning and search rows remain separate.",
+      "cardIds": [
+        "card-aa-grok-4-fast",
+        "card-arena-grok-4-fast-chat"
+      ]
+    },
+    {
+      "canonicalProfileKey": "deepseek-llm-67b-chat-v1",
+      "evidence": "Same DeepSeek LLM 67B Chat v1 release; Artificial Analysis is the only source that prints the v1 suffix.",
+      "cardIds": [
+        "card-aa-deepseek-llm-67b-chat",
+        "card-arena-deepseek-llm-67b-chat"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen-14b-chat",
+      "evidence": "Same Qwen 14B Chat model; only Chat/size token order differs.",
+      "cardIds": [
+        "card-aa-qwen-chat-14b",
+        "card-arena-qwen-14b-chat"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen1-5-110b-chat",
+      "evidence": "Same Qwen1.5 110B Chat model; only Chat/size token order differs.",
+      "cardIds": [
+        "card-aa-qwen1-5-110b-chat",
+        "card-arena-qwen1-5-110b-chat"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen2-72b-instruct",
+      "evidence": "Same Qwen2 72B Instruct model; only Instruct/size token order differs.",
+      "cardIds": [
+        "card-aa-qwen2-72b-instruct",
+        "card-arena-qwen2-72b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "jamba-large-1-7",
+      "evidence": "Same Jamba Large 1.7 model; only family/version token order differs.",
+      "cardIds": [
+        "card-aa-jamba-1-7-large",
+        "card-openrouter-ai21-jamba-large-1-7"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemma-3-12b-it",
+      "evidence": "Gemma uses 'IT' and 'Instruct' for the same instruction-tuned release; OpenRouter's record ID retains the IT suffix.",
+      "cardIds": [
+        "card-aa-gemma-3-12b",
+        "card-arena-gemma-3-12b-it",
+        "card-openrouter-google-gemma-3-12b-it"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemma-3-27b-it",
+      "evidence": "Gemma uses 'IT' and 'Instruct' for the same instruction-tuned release; OpenRouter's record ID retains the IT suffix.",
+      "cardIds": [
+        "card-aa-gemma-3-27b",
+        "card-arena-gemma-3-27b-it",
+        "card-openrouter-google-gemma-3-27b-it"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemma-3-4b-it",
+      "evidence": "Gemma uses 'IT' and 'Instruct' for the same instruction-tuned release; OpenRouter's record ID retains the IT suffix.",
+      "cardIds": [
+        "card-aa-gemma-3-4b",
+        "card-arena-gemma-3-4b-it",
+        "card-openrouter-google-gemma-3-4b-it"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemma-3n-e4b-it",
+      "evidence": "Same Gemma 3n E4B instruction-tuned release; OpenRouter shortens the display label to 4B but retains E4B in the exact card ID.",
+      "cardIds": [
+        "card-aa-gemma-3n-e4b",
+        "card-arena-gemma-3n-e4b-it",
+        "card-openrouter-google-gemma-3n-e4b-it"
+      ]
+    },
+    {
+      "canonicalProfileKey": "mistral-large-3-2512",
+      "evidence": "Mistral Large 3 is the 2512 release; OpenRouter retains the dated model ID.",
+      "cardIds": [
+        "card-aa-mistral-large-3",
+        "card-arena-mistral-large-3",
+        "card-openrouter-mistralai-mistral-large-2512"
+      ]
+    },
+    {
+      "canonicalProfileKey": "mistral-medium-3-2505",
+      "evidence": "Mistral Medium 3 is the 2505 release; Arena retains the dated model ID.",
+      "cardIds": [
+        "card-aa-mistral-medium-3",
+        "card-arena-mistral-medium-2505",
+        "card-openrouter-mistralai-mistral-medium-3"
+      ]
+    },
+    {
+      "canonicalProfileKey": "mistral-medium-3-1-2508",
+      "evidence": "Mistral Medium 3.1 is the 2508 release; Arena retains the dated model ID.",
+      "cardIds": [
+        "card-aa-mistral-medium-3-1",
+        "card-arena-mistral-medium-2508",
+        "card-openrouter-mistralai-mistral-medium-3-1"
+      ]
+    },
+    {
+      "canonicalProfileKey": "mistral-small-3-2501",
+      "evidence": "Mistral Small 3 is the 24B 2501 release; Arena and OpenRouter retain size/date details.",
+      "cardIds": [
+        "card-aa-mistral-small-3",
+        "card-arena-mistral-small-24b-instruct-2501",
+        "card-openrouter-mistralai-mistral-small-24b-instruct-2501"
+      ]
+    },
+    {
+      "canonicalProfileKey": "mistral-small-3-1-2503",
+      "evidence": "Mistral Small 3.1 is the 24B 2503 release; Arena retains the exact date and OpenRouter retains the size.",
+      "cardIds": [
+        "card-aa-mistral-small-3-1",
+        "card-arena-mistral-small-3-1-24b-instruct-2503",
+        "card-openrouter-mistralai-mistral-small-3-1-24b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "mistral-small-3-2-2506",
+      "evidence": "Mistral Small 3.2 is the 24B 2506 release; Arena retains the date and OpenRouter retains the size.",
+      "cardIds": [
+        "card-aa-mistral-small-3-2",
+        "card-arena-mistral-small-2506",
+        "card-openrouter-mistralai-mistral-small-3-2-24b-instruct"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-opus-5-default-high",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=high for the standard Claude Opus 5 route; AA and Arena explicitly label the corresponding High profile.",
+      "cardIds": [
+        "card-aa-claude-opus-5-high",
+        "card-arena-claude-opus-5-high",
+        "card-openrouter-anthropic-claude-opus-5"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-sonnet-5-default-high",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=high for the standard Claude Sonnet 5 route; AA and Arena explicitly label the corresponding High profile.",
+      "cardIds": [
+        "card-aa-claude-sonnet-5-high",
+        "card-arena-claude-sonnet-5-high",
+        "card-openrouter-anthropic-claude-sonnet-5"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-5-6-sol-default-medium",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=medium for the standard GPT-5.6 Sol route; AA explicitly publishes the Medium profile.",
+      "cardIds": [
+        "card-aa-gpt-5-6-sol-medium",
+        "card-openrouter-openai-gpt-5-6-sol"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-5-6-terra-default-medium",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=medium for the standard GPT-5.6 Terra route; AA explicitly publishes the Medium profile.",
+      "cardIds": [
+        "card-aa-gpt-5-6-terra-medium",
+        "card-openrouter-openai-gpt-5-6-terra"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-5-6-luna-default-medium",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=medium for the standard GPT-5.6 Luna route; AA explicitly publishes the Medium profile.",
+      "cardIds": [
+        "card-aa-gpt-5-6-luna-medium",
+        "card-openrouter-openai-gpt-5-6-luna"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gpt-5-5-default-medium",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=medium for the standard GPT-5.5 route; AA explicitly publishes the Medium profile.",
+      "cardIds": [
+        "card-aa-gpt-5-5-medium",
+        "card-openrouter-openai-gpt-5-5"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-6-27b-default-reasoning",
+      "evidence": "OpenRouter publishes default_enabled=true for Qwen3.6 27B; AA explicitly labels the same checkpoint's Reasoning profile.",
+      "cardIds": [
+        "card-aa-qwen3-6-27b",
+        "card-openrouter-qwen-qwen3-6-27b"
+      ]
+    },
+    {
+      "canonicalProfileKey": "qwen3-6-35b-a3b-default-reasoning",
+      "evidence": "OpenRouter publishes default_enabled=true for Qwen3.6 35B A3B; AA explicitly labels the same checkpoint's Reasoning profile.",
+      "cardIds": [
+        "card-aa-qwen3-6-35b-a3b",
+        "card-openrouter-qwen-qwen3-6-35b-a3b"
+      ]
+    },
+    {
+      "canonicalProfileKey": "gemini-3-5-flash-default-medium",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=medium for Gemini 3.5 Flash; AA and Arena explicitly label the corresponding Medium profile.",
+      "cardIds": [
+        "card-aa-gemini-3-5-flash-medium",
+        "card-arena-gemini-3-5-flash-medium",
+        "card-openrouter-google-gemini-3-5-flash"
+      ]
+    },
+    {
+      "canonicalProfileKey": "grok-4-5-default-high",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=high for Grok 4.5; AA explicitly labels its High profile.",
+      "cardIds": [
+        "card-aa-grok-4-5",
+        "card-openrouter-x-ai-grok-4-5"
+      ]
+    },
+    {
+      "canonicalProfileKey": "grok-4-3-high",
+      "evidence": "Artificial Analysis publishes openrouterApiId=x-ai/grok-4.3 for the High profile; Arena uses the same High label and OpenRouter publishes the unsuffixed route.",
+      "cardIds": [
+        "card-aa-grok-4-3",
+        "card-arena-grok-4-3-high",
+        "card-openrouter-x-ai-grok-4-3"
+      ]
+    },
+    {
+      "canonicalProfileKey": "grok-build-0-1-0616",
+      "evidence": "Artificial Analysis publishes openrouterApiId=x-ai/grok-build-0.1 for the exact Grok Build 0.1 0616 record.",
+      "cardIds": [
+        "card-aa-grok-build-0-1-06-16",
+        "card-openrouter-x-ai-grok-build-0-1"
+      ]
+    },
+    {
+      "canonicalProfileKey": "inkling-xhigh",
+      "evidence": "Artificial Analysis publishes openrouterApiId=thinkingmachines/inkling for the exact Inkling XHigh record.",
+      "cardIds": [
+        "card-aa-inkling",
+        "card-openrouter-thinkingmachines-inkling"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-opus-4-6-default-non-reasoning-high",
+      "evidence": "OpenRouter publishes default_enabled=false and default_effort=high for Claude Opus 4.6; AA labels Non-reasoning High, while Arena has a separate Thinking row and its base row is the non-thinking configuration.",
+      "cardIds": [
+        "card-aa-claude-opus-4-6",
+        "card-arena-claude-opus-4-6",
+        "card-openrouter-anthropic-claude-opus-4-6"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-opus-4-7-default-non-reasoning-high",
+      "evidence": "OpenRouter publishes default_enabled=false and default_effort=high for Claude Opus 4.7; AA labels Non-reasoning High, while Arena has a separate Thinking row and its base row is the non-thinking configuration.",
+      "cardIds": [
+        "card-aa-claude-opus-4-7-non-reasoning",
+        "card-arena-claude-opus-4-7",
+        "card-openrouter-anthropic-claude-opus-4-7"
+      ]
+    },
+    {
+      "canonicalProfileKey": "claude-opus-4-8-default-non-reasoning-high",
+      "evidence": "OpenRouter publishes default_enabled=false and default_effort=high for Claude Opus 4.8; Arena has a separate Thinking row, so its base row is the matching non-thinking default configuration.",
+      "cardIds": [
+        "card-arena-claude-opus-4-8",
+        "card-openrouter-anthropic-claude-opus-4-8"
+      ]
+    },
+    {
+      "canonicalProfileKey": "nemotron-3-super-120b-a12b-default-medium",
+      "evidence": "OpenRouter publishes default_enabled=true and default_effort=medium for the 120B A12B checkpoint; Arena's exact checkpoint row is the unsuffixed default configuration.",
+      "cardIds": [
+        "card-arena-nvidia-nemotron-3-super-120b-a12b",
+        "card-openrouter-nvidia-nemotron-3-super-120b-a12b"
+      ]
+    }
+  ]
+}

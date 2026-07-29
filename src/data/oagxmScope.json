@@ -1,0 +1,181 @@
+{
+  "schemaVersion": "oagxm-current-product-lines/v3-data-md",
+  "scopeId": "oagxm-current-product-lines",
+  "snapshotPolicy": "Keep every source-published execution profile for the listed product lines, including the Data.md model inventory. Never merge reasoning effort, harness, fast, pro, custom-tools, or serving-environment variants by name. Arena Search and Grounding suffixes are benchmark row labels, so their observations belong to the underlying model rather than a separate execution configuration; the original row identity remains in provenance. Exclude variable latest aliases and :free routes. A model mentioned only through a client or IDE environment is not automatically represented as that environment; it needs a source-published record for the exact profile.",
+  "benchmarkBoundary": "General-purpose text or multimodal foundation models supported by the LLM capability registry. Historical Data.md entries are retained only when an exact record is published by Artificial Analysis, Arena, or OpenRouter. Dedicated image, video, speech, embedding, moderation, and safety-only APIs are outside the formal capability leaderboard unless a corresponding source benchmark is added.",
+  "vendors": [
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "officialModelsUrl": "https://developers.openai.com/api/docs/guides/latest-model",
+      "productLines": [
+        { "id": "gpt_56_luna", "name": "GPT-5.6 Luna", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgpt[- ]5\\.6[- ]luna\\b"] },
+        { "id": "gpt_56_sol", "name": "GPT-5.6 Sol", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgpt[- ]5\\.6[- ]sol\\b"] },
+        { "id": "gpt_56_terra", "name": "GPT-5.6 Terra", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgpt[- ]5\\.6[- ]terra\\b"] },
+        { "id": "gpt_55", "name": "GPT-5.5", "tier": "historical", "rankingClass": "formal_text_agent", "patterns": ["\\bgpt[- ]5[._-]5\\b"] },
+        { "id": "gpt_oss_120b", "name": "gpt-oss-120b", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgpt[- ]oss[- ]120b\\b"] },
+        { "id": "gpt_oss_20b", "name": "gpt-oss-20b", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgpt[- ]oss[- ]20b\\b"] }
+      ]
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "officialModelsUrl": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "productLines": [
+        { "id": "claude_fable_5", "name": "Claude Fable 5", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bclaude[- ]fable[- ]5\\b"] },
+        { "id": "claude_opus_5", "name": "Claude Opus 5", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bclaude[- ]opus[- ]5\\b"] },
+        { "id": "claude_opus_48", "name": "Claude Opus 4.8", "tier": "historical", "rankingClass": "formal_text_agent", "patterns": ["\\bclaude[- ]opus[- ]4[._-]8\\b"] },
+        { "id": "claude_opus_47", "name": "Claude Opus 4.7", "tier": "historical", "rankingClass": "formal_text_agent", "patterns": ["\\bclaude[- ]opus[- ]4[._-]7\\b"] },
+        { "id": "claude_opus_46", "name": "Claude Opus 4.6", "tier": "historical", "rankingClass": "formal_text_agent", "patterns": ["\\bclaude[- ]opus[- ]4[._-]6\\b"] },
+        { "id": "claude_opus_45", "name": "Claude Opus 4.5", "tier": "historical", "rankingClass": "formal_text_agent", "patterns": ["\\bclaude[- ]opus[- ]4[._-]5\\b"] },
+        { "id": "claude_sonnet_5", "name": "Claude Sonnet 5", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bclaude[- ]sonnet[- ]5\\b"] },
+        { "id": "claude_haiku_45", "name": "Claude Haiku 4.5", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bclaude[- ](?:haiku[- ]4[._-]5|4[._-]5[- ]haiku)\\b"] }
+      ]
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "officialModelsUrl": "https://ai.google.dev/gemini-api/docs/models",
+      "productLines": [
+        { "id": "gemini_31_pro", "name": "Gemini 3.1 Pro", "tier": "preview", "rankingClass": "formal_text_agent", "patterns": ["\\bgemini[- ]3\\.1[- ]pro\\b"] },
+        { "id": "gemini_36_flash", "name": "Gemini 3.6 Flash", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgemini[- ]3\\.6[- ]flash\\b"] },
+        { "id": "gemini_35_flash", "name": "Gemini 3.5 Flash", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgemini[- ]3\\.5[- ]flash(?![- ]lite)\\b"], "allowPreviewSourceRecords": false },
+        { "id": "gemini_35_flash_lite", "name": "Gemini 3.5 Flash-Lite", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgemini[- ]3\\.5[- ]flash[- ]lite\\b"] },
+        { "id": "gemini_25_flash_lite", "name": "Gemini 2.5 Flash-Lite", "tier": "historical", "rankingClass": "formal_text_agent", "patterns": ["\\bgemini[- ]2[._-]5[- ]flash[- ]lite\\b"] },
+        { "id": "gemma_4_31b", "name": "Gemma 4 31B", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgemma[- ]4[- ]31b\\b"] },
+        { "id": "gemma_4_26b_a4b", "name": "Gemma 4 26B A4B", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgemma[- ]4[- ]26b[- ]a4b\\b"] },
+        { "id": "gemini_31_flash_lite", "name": "Gemini 3.1 Flash-Lite", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgemini[- ]3\\.1[- ]flash[- ]lite(?![- ]image\\b)\\b"], "allowPreviewSourceRecords": false }
+      ]
+    },
+    {
+      "id": "xai",
+      "name": "xAI",
+      "officialModelsUrl": "https://docs.x.ai/developers/models",
+      "productLines": [
+        { "id": "grok_45", "name": "Grok 4.5", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bgrok[- ]4\\.5\\b"] }
+      ]
+    },
+    {
+      "id": "meta",
+      "name": "Meta",
+      "officialModelsUrl": "https://ai.meta.com/llama",
+      "productLines": [
+        { "id": "muse_spark_11", "name": "Muse Spark 1.1", "tier": "preview", "rankingClass": "formal_text_agent", "patterns": ["\\bmuse[- ]spark[- ]1\\.1\\b"] },
+        { "id": "llama_4_maverick", "name": "Llama 4 Maverick", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bllama[- ]4[- ]maverick\\b"] },
+        { "id": "llama_4_scout", "name": "Llama 4 Scout", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bllama[- ]4[- ]scout\\b"] }
+      ]
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "officialModelsUrl": "https://api-docs.deepseek.com/quick_start/pricing",
+      "productLines": [
+        { "id": "deepseek_v4_flash", "name": "DeepSeek V4 Flash", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bdeepseek[- ]v?4[- ]flash\\b"] },
+        { "id": "deepseek_v4_pro", "name": "DeepSeek V4 Pro", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bdeepseek[- ]v?4[- ]pro\\b"] }
+      ]
+    },
+    {
+      "id": "zai",
+      "name": "Z.ai",
+      "officialModelsUrl": "https://docs.z.ai/",
+      "productLines": [
+        { "id": "glm_52", "name": "GLM-5.2", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bglm[- ]5[._-]2\\b"] }
+      ]
+    },
+    {
+      "id": "tencent",
+      "name": "Tencent / GMICloud",
+      "officialModelsUrl": "https://cloud.tencent.com/document/product/1729",
+      "productLines": [
+        { "id": "hunyuan_hy3", "name": "Hunyuan Hy3", "tier": "preview", "rankingClass": "formal_text_agent", "patterns": ["(?:\\bhy[- ]?3\\b|\\bhunyuan[- ]hy3\\b)"] }
+      ]
+    },
+    {
+      "id": "moonshot",
+      "name": "Moonshot AI",
+      "officialModelsUrl": "https://platform.moonshot.ai/docs/guide/start-using-kimi",
+      "productLines": [
+        { "id": "kimi_k26", "name": "Kimi K2.6", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bkimi[- ]k?2[._-]6\\b"] },
+        { "id": "kimi_k3", "name": "Kimi K3", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bkimi[- ]k?3\\b"] }
+      ]
+    },
+    {
+      "id": "minimax",
+      "name": "MiniMax",
+      "officialModelsUrl": "https://platform.minimax.io/docs/guides/models-intro",
+      "productLines": [
+        { "id": "minimax_m3", "name": "MiniMax M3", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bminimax[- ]m3\\b"] }
+      ]
+    },
+    {
+      "id": "alibaba",
+      "name": "Alibaba / Qwen",
+      "officialModelsUrl": "https://www.alibabacloud.com/help/en/model-studio/models",
+      "productLines": [
+        { "id": "qwen_38_max_preview", "name": "Qwen 3.8 Max Preview", "tier": "preview", "rankingClass": "formal_text_agent", "patterns": ["\\bqwen[- ]?3[._-]8[- ]max[- ]preview\\b"] },
+        { "id": "qwen_37_max", "name": "Qwen 3.7 Max", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bqwen[- ]?3[._-]7[- ]max\\b"], "allowPreviewSourceRecords": false },
+        { "id": "qwen_37_plus", "name": "Qwen 3.7 Plus", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bqwen[- ]?3[._-]7[- ]plus\\b"] },
+        { "id": "qwen_36_27b", "name": "Qwen 3.6 27B", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bqwen[- ]?3[._-]6[- ]27b\\b"] },
+        { "id": "qwen_36_35b_a3b", "name": "Qwen 3.6 35B A3B", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bqwen[- ]?3[._-]6[- ]35b[- ]a3b\\b"] }
+      ]
+    },
+    {
+      "id": "bytedance",
+      "name": "ByteDance",
+      "officialModelsUrl": "https://www.volcengine.com/docs/82379",
+      "productLines": [
+        { "id": "seed_21_turbo", "name": "Seed 2.1 Turbo", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bseed[- ]2[._-]1[- ]turbo\\b"] }
+      ]
+    },
+    {
+      "id": "meituan",
+      "name": "Meituan LongCat",
+      "officialModelsUrl": "https://github.com/meituan-longcat",
+      "productLines": [
+        { "id": "longcat_20", "name": "LongCat 2.0", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\blongcat[- ]2[._-]0\\b"] }
+      ]
+    },
+    {
+      "id": "kwaipilot",
+      "name": "Kwaipilot / KAT",
+      "officialModelsUrl": "https://www.kwaipilot.com/",
+      "productLines": [
+        { "id": "kat_coder_pro_v25", "name": "KAT-Coder-Pro V2.5", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bkat[- ]coder[- ]pro[- ]v?2[._-]5\\b"] }
+      ]
+    },
+    {
+      "id": "xiaomi",
+      "name": "Xiaomi",
+      "officialModelsUrl": "https://platform.xiaomimimo.com/",
+      "productLines": [
+        { "id": "mimo_v25_pro", "name": "Mimo V2.5 Pro", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bmimo[- ]v?2[._-]5[- ]pro\\b"] }
+      ]
+    },
+    {
+      "id": "stepfun",
+      "name": "StepFun",
+      "officialModelsUrl": "https://platform.stepfun.com/docs/overview/models",
+      "productLines": [
+        { "id": "step_37_flash", "name": "Step 3.7 Flash", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bstep[- ]3[._-]7[- ]flash\\b"] }
+      ]
+    },
+    {
+      "id": "mistral",
+      "name": "Mistral AI",
+      "officialModelsUrl": "https://docs.mistral.ai/getting-started/models/",
+      "productLines": [
+        { "id": "mistral_medium_35", "name": "Mistral Medium 3.5", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bmistral[- ]medium[- ]3[._-]5\\b"] }
+      ]
+    },
+    {
+      "id": "nvidia",
+      "name": "NVIDIA",
+      "officialModelsUrl": "https://build.nvidia.com/explore/discover",
+      "productLines": [
+        { "id": "nemotron_3_ultra", "name": "Nemotron 3 Ultra", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\b(?:nvidia[- ]?)?nemotron[- ]3[- ]ultra\\b"] },
+        { "id": "nemotron_3_super", "name": "Nemotron 3 Super", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\b(?:nvidia[- ]?)?nemotron[- ]3[- ]super\\b"] },
+        { "id": "nemotron_3_nano", "name": "Nemotron 3 Nano", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\b(?:nvidia[- ]?)?nemotron[- ]3[- ]nano\\b"] }
+      ]
+    }
+  ]
+}

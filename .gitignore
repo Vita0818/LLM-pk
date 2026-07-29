@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Generated builds and compiler state
+dist/
+*.tsbuildinfo
+
+# Local caches and working data
+.cache/
+scratch/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Test and tool output
+coverage/
+*.log
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/

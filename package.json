@@ -1,0 +1,40 @@
+{
+  "name": "llm-pk",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "test": "npm run test:scoring && npm run test:admin-mapping && npm run test:scope",
+    "test:scoring": "esbuild scripts/scoringEngine.test.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-scoring-engine.test.mjs && node /tmp/llmpk-scoring-engine.test.mjs",
+    "test:admin-mapping": "esbuild scripts/adminMappingStore.test.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-admin-mapping-store.test.mjs && node /tmp/llmpk-admin-mapping-store.test.mjs",
+    "test:scope": "esbuild scripts/oagxmScope.test.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-oagxm-scope.test.mjs && node /tmp/llmpk-oagxm-scope.test.mjs",
+    "audit:arena": "node scripts/arena_data_self_audit.mjs",
+    "audit:scoring": "esbuild scripts/scoringSnapshotAudit.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-scoring-snapshot-audit.mjs && node /tmp/llmpk-scoring-snapshot-audit.mjs",
+    "audit:profile-matches": "esbuild scripts/sourceProfileMatchAudit.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-source-profile-match-audit.mjs && node /tmp/llmpk-source-profile-match-audit.mjs",
+    "audit:config-coverage": "esbuild scripts/configurationCoverageAudit.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-configuration-coverage-audit.mjs && node /tmp/llmpk-configuration-coverage-audit.mjs",
+    "refresh:source-snapshots": "node scripts/refreshSourceSnapshots.mjs",
+    "refresh:artificial-analysis": "node scripts/fetchArtificialAnalysisSnapshot.mjs",
+    "refresh:arena": "node scripts/fetchArenaSnapshots.mjs",
+    "refresh:openrouter-catalog": "node scripts/fetchOpenRouterCatalogSnapshot.mjs",
+    "refresh:openrouter-performance": "node scripts/fetchOpenRouterPerformanceSnapshot.mjs",
+    "validate:source-snapshots": "node scripts/validateSourceSnapshots.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.475.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.1.0"
+  }
+}

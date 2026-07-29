@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,600..900;1,6..72,600..900&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Inter:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #ffffff;
+    color: #0f172a;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+.font-brand-serif {
+  font-family: 'Newsreader', Georgia, serif;
+}
+.font-brand-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
