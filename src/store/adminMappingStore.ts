@@ -2524,7 +2524,11 @@ export class AdminMappingStore {
         entryPoint: subscriptionData
           ? subscriptionData.planName.startsWith('ChatGPT')
             ? 'ChatGPT Subscription'
-            : 'Claude Subscription'
+            : subscriptionData.planName.startsWith('Claude')
+              ? 'Claude Subscription'
+              : subscriptionData.planName.startsWith('Google')
+                ? 'Google Subscription'
+                : 'xAI Subscription'
           : usesOpenRouter
             ? 'OpenRouter API'
             : 'Direct Provider API',

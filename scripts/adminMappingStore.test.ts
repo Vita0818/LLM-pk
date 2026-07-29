@@ -917,74 +917,180 @@ for (const preset of BUILT_IN_CONFIGURATION_PRESETS.filter(({ access }) => acces
     `API preset ${preset.id} must name the model author's vendor without binding to one serving endpoint.`,
   );
 }
-const expectedSubscriptionPresets = new Map<string, {
+interface ExpectedSubscriptionPreset {
   basePresetId: string;
   providerLabel: string;
   monthlyPriceUSD: number;
   apiEquivalentCostUSD: number;
   usableQuotaFraction: number;
-}>([
-  [
-    'builtin.subscription.chatgpt-plus.gpt-5-6-sol.max.codex-cli',
-    {
-      basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
-      providerLabel: 'ChatGPT Plus',
-      monthlyPriceUSD: 20,
-      apiEquivalentCostUSD: 126.05,
-      usableQuotaFraction: 1,
-    },
-  ],
-  [
-    'builtin.subscription.chatgpt-pro-20x.gpt-5-6-sol.max.codex-cli',
-    {
-      basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
-      providerLabel: 'ChatGPT Pro 20×',
-      monthlyPriceUSD: 200,
-      apiEquivalentCostUSD: 2521,
-      usableQuotaFraction: 1,
-    },
-  ],
-  [
-    'builtin.subscription.claude-pro.claude-fable-5.max.claude-code',
-    {
-      basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
-      providerLabel: 'Claude Pro',
-      monthlyPriceUSD: 20,
-      apiEquivalentCostUSD: 79.9,
-      usableQuotaFraction: 0.5,
-    },
-  ],
-  [
-    'builtin.subscription.claude-max-20x.claude-fable-5.max.claude-code',
-    {
-      basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
-      providerLabel: 'Claude Max 20×',
-      monthlyPriceUSD: 200,
-      apiEquivalentCostUSD: 1598,
-      usableQuotaFraction: 0.5,
-    },
-  ],
-  [
-    'builtin.subscription.claude-pro.claude-opus-5.max.claude-code',
-    {
-      basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
-      providerLabel: 'Claude Pro',
-      monthlyPriceUSD: 20,
-      apiEquivalentCostUSD: 79.9,
-      usableQuotaFraction: 1,
-    },
-  ],
-  [
-    'builtin.subscription.claude-max-20x.claude-opus-5.max.claude-code',
-    {
-      basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
-      providerLabel: 'Claude Max 20×',
-      monthlyPriceUSD: 200,
-      apiEquivalentCostUSD: 1598,
-      usableQuotaFraction: 1,
-    },
-  ],
-]);
+}
+
+interface ExpectedSubscriptionTarget {
+  key: string;
+  basePresetId: string;
+  usableQuotaFraction: number;
+}
+
+const chatGptPlusTargets: readonly ExpectedSubscriptionTarget[] = [
+  {
+    key: 'gpt-5-6-sol.max.codex-cli',
+    basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'gpt-5-6-terra.max.codex-cli',
+    basePresetId: 'builtin.harness.gpt-5-6-terra.max.codex-cli',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'gpt-5-6-luna.max.codex-cli',
+    basePresetId: 'builtin.harness.gpt-5-6-luna.max.codex-cli',
+    usableQuotaFraction: 1,
+  },
+];
+
+const claudeProTargets: readonly ExpectedSubscriptionTarget[] = [
+  {
+    key: 'claude-fable-5.max.claude-code',
+    basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
+    usableQuotaFraction: 0.5,
+  },
+  {
+    key: 'claude-opus-5.max.claude-code',
+    basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'claude-sonnet-5.max.arena-agent-mode',
+    basePresetId: 'builtin.agent.arena.claude-sonnet-5.max',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'claude-sonnet-4-6.max.claude-code',
+    basePresetId: 'builtin.harness.claude-sonnet-4-6.max.claude-code',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'claude-haiku-4-5.max.chat',
+    basePresetId: 'builtin.data-md.claude-haiku-4-5.max.vertex',
+    usableQuotaFraction: 1,
+  },
+];
+
+const googleSubscriptionTargets: readonly ExpectedSubscriptionTarget[] = [
+  {
+    key: 'gemini-3-1-pro.high.gemini-cli',
+    basePresetId: 'builtin.harness.gemini-3-1-pro.high.gemini-cli',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'gemini-3-6-flash.high.chat',
+    basePresetId: 'builtin.data-md.gemini-3-6-flash.high.ai-studio',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'gemini-3-5-flash.high.arena-agent-mode',
+    basePresetId: 'builtin.agent.arena.gemini-3-5-flash.high',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'gemini-3-5-flash-lite.high.chat',
+    basePresetId: 'builtin.data-md.gemini-3-5-flash-lite.high.ai-studio',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'gemini-3-1-flash-lite-preview.max.chat',
+    basePresetId:
+      'builtin.source-catalog.source-profile-gemini-3-1-flash-lite-preview.gemini-3-1-flash-lite-preview',
+    usableQuotaFraction: 1,
+  },
+];
+
+const superGrokTargets: readonly ExpectedSubscriptionTarget[] = [
+  {
+    key: 'grok-4-5.high.grok-build',
+    basePresetId: 'builtin.harness.grok-4-5.high.grok-build',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'grok-build-0-1.max.arena-agent-mode',
+    basePresetId: 'builtin.agent.arena.grok-build-0-1.max',
+    usableQuotaFraction: 1,
+  },
+  {
+    key: 'grok-4-3.high.chat',
+    basePresetId:
+      'builtin.source-catalog.source-profile-grok-4-3-high.grok-4-3-high',
+    usableQuotaFraction: 1,
+  },
+];
+
+const expectedSubscriptionPlans = [
+  {
+    key: 'chatgpt-plus',
+    providerLabel: 'ChatGPT Plus',
+    monthlyPriceUSD: 20,
+    apiEquivalentCostUSD: 125,
+    targets: chatGptPlusTargets,
+  },
+  {
+    key: 'chatgpt-pro-20x',
+    providerLabel: 'ChatGPT Pro 20×',
+    monthlyPriceUSD: 200,
+    apiEquivalentCostUSD: 2500,
+    targets: chatGptPlusTargets.slice(0, 1),
+  },
+  {
+    key: 'claude-pro',
+    providerLabel: 'Claude Pro',
+    monthlyPriceUSD: 20,
+    apiEquivalentCostUSD: 80,
+    targets: claudeProTargets,
+  },
+  {
+    key: 'claude-max-20x',
+    providerLabel: 'Claude Max 20×',
+    monthlyPriceUSD: 200,
+    apiEquivalentCostUSD: 1600,
+    targets: claudeProTargets.slice(0, 2),
+  },
+  {
+    key: 'google-ai-pro',
+    providerLabel: 'Google AI Pro',
+    monthlyPriceUSD: 20,
+    apiEquivalentCostUSD: 260,
+    targets: googleSubscriptionTargets,
+  },
+  {
+    key: 'google-ai-ultra-20x',
+    providerLabel: 'Google AI Ultra 20×',
+    monthlyPriceUSD: 200,
+    apiEquivalentCostUSD: 5200,
+    targets: googleSubscriptionTargets,
+  },
+  {
+    key: 'supergrok',
+    providerLabel: 'SuperGrok',
+    monthlyPriceUSD: 30,
+    apiEquivalentCostUSD: 150,
+    targets: superGrokTargets,
+  },
+] as const;
+
+const expectedSubscriptionPresets = new Map<string, ExpectedSubscriptionPreset>(
+  expectedSubscriptionPlans.flatMap((plan) => plan.targets.map(
+    (target): [string, ExpectedSubscriptionPreset] => [
+      `builtin.subscription.${plan.key}.${target.key}`,
+      {
+        basePresetId: target.basePresetId,
+        providerLabel: plan.providerLabel,
+        monthlyPriceUSD: plan.monthlyPriceUSD,
+        apiEquivalentCostUSD: plan.apiEquivalentCostUSD,
+        usableQuotaFraction: target.usableQuotaFraction,
+      },
+    ],
+  )),
+);
 const subscriptionPresets = BUILT_IN_CONFIGURATION_PRESETS
   .filter(({ access }) => access === 'subscription');
 assert.equal(subscriptionPresets.length, expectedSubscriptionPresets.size);
@@ -1083,6 +1189,18 @@ for (const box of installedPresetBoxes) {
   );
   assert.ok(preset);
   const config = reconciledV3Store.buildLLMConfiguration(box);
+  if (preset.subscriptionData) {
+    const expectedEntryPoint = preset.subscriptionData.planName.startsWith('ChatGPT')
+      ? 'ChatGPT Subscription'
+      : preset.subscriptionData.planName.startsWith('Claude')
+        ? 'Claude Subscription'
+        : preset.subscriptionData.planName.startsWith('Google')
+          ? 'Google Subscription'
+          : 'xAI Subscription';
+    assert.equal(config.access.entryPoint, expectedEntryPoint);
+    assert.equal(config.provider, preset.subscriptionData.planName);
+    assert.deepEqual(config.subscriptionData, preset.subscriptionData);
+  }
   if (preset.identity.harness.name === 'Chat') {
     assert.ok(
       Object.keys(config.observations).every(

@@ -369,7 +369,7 @@ chatGptSubscriptionConfiguration.openRouterData = {
 chatGptSubscriptionConfiguration.subscriptionData = {
   planName: 'ChatGPT Pro 20×',
   monthlyPriceUSD: 200,
-  apiEquivalentCostUSD: 2521,
+  apiEquivalentCostUSD: 2500,
   usableQuotaFraction: 1,
 };
 const chatGptPlusConfiguration = makeConfiguration('chatgpt-plus', {});
@@ -379,7 +379,7 @@ chatGptPlusConfiguration.openRouterData = {
 chatGptPlusConfiguration.subscriptionData = {
   planName: 'ChatGPT Plus',
   monthlyPriceUSD: 20,
-  apiEquivalentCostUSD: 2521 / 20,
+  apiEquivalentCostUSD: 125,
   usableQuotaFraction: 1,
 };
 const claudeSubscriptionConfiguration = makeConfiguration(
@@ -392,7 +392,7 @@ claudeSubscriptionConfiguration.openRouterData = {
 claudeSubscriptionConfiguration.subscriptionData = {
   planName: 'Claude Max 20×',
   monthlyPriceUSD: 200,
-  apiEquivalentCostUSD: 1598,
+  apiEquivalentCostUSD: 1600,
   usableQuotaFraction: 0.5,
 };
 const claudeProFableConfiguration = makeConfiguration('claude-pro-fable', {});
@@ -402,7 +402,7 @@ claudeProFableConfiguration.openRouterData = {
 claudeProFableConfiguration.subscriptionData = {
   planName: 'Claude Pro',
   monthlyPriceUSD: 20,
-  apiEquivalentCostUSD: 1598 / 20,
+  apiEquivalentCostUSD: 80,
   usableQuotaFraction: 0.5,
 };
 const claudeMaxOpusConfiguration = makeConfiguration('claude-max-opus', {});
@@ -412,7 +412,7 @@ claudeMaxOpusConfiguration.openRouterData = {
 claudeMaxOpusConfiguration.subscriptionData = {
   planName: 'Claude Max 20×',
   monthlyPriceUSD: 200,
-  apiEquivalentCostUSD: 1598,
+  apiEquivalentCostUSD: 1600,
   usableQuotaFraction: 1,
 };
 const subscriptionCostResults = processLLMpkBatchScoring([
@@ -430,23 +430,23 @@ const subscriptionCostsById = new Map(subscriptionCostResults.map((result) => [
 nearlyEqual(subscriptionCostsById.get('api-cost-route')!, 15);
 nearlyEqual(
   subscriptionCostsById.get('chatgpt-pro-subscription')!,
-  15 * 200 / 2521,
+  15 * 200 / 2500,
 );
 nearlyEqual(
   subscriptionCostsById.get('chatgpt-plus')!,
-  15 * 20 / (2521 / 20),
+  15 * 20 / 125,
 );
 nearlyEqual(
   subscriptionCostsById.get('claude-max-subscription')!,
-  15 * 200 / (1598 * 0.5),
+  15 * 200 / (1600 * 0.5),
 );
 nearlyEqual(
   subscriptionCostsById.get('claude-pro-fable')!,
-  15 * 20 / ((1598 / 20) * 0.5),
+  15 * 20 / (80 * 0.5),
 );
 nearlyEqual(
   subscriptionCostsById.get('claude-max-opus')!,
-  15 * 200 / 1598,
+  15 * 200 / 1600,
 );
 assert.ok(
   subscriptionCostsById.get('claude-max-subscription')!

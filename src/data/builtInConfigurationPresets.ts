@@ -2791,69 +2791,184 @@ interface SubscriptionConfigurationSpec {
   note: string;
 }
 
-const CHATGPT_PRO_20X_API_EQUIVALENT_USD = 2521;
-const CLAUDE_MAX_20X_API_EQUIVALENT_USD = 1598;
-const BASE_PLAN_TO_20X_QUOTA_DIVISOR = 20;
+interface SubscriptionPlanDefinition {
+  key: string;
+  planName: string;
+  monthlyPriceUSD: number;
+  apiEquivalentCostUSD: number;
+  note: string;
+}
 
-const SUBSCRIPTION_CONFIGURATION_SPECS: readonly SubscriptionConfigurationSpec[] = [
+interface SubscriptionConfigurationTarget {
+  key: string;
+  basePresetId: string;
+  plans: readonly SubscriptionPlanDefinition[];
+  usableQuotaFraction?: number;
+  note?: string;
+}
+
+const BASE_PLAN_TO_20X_QUOTA_DIVISOR = 20;
+const CHATGPT_PRO_20X_API_EQUIVALENT_USD = 2500;
+const CLAUDE_MAX_20X_API_EQUIVALENT_USD = 1600;
+const GOOGLE_AI_ULTRA_20X_API_EQUIVALENT_USD = 5200;
+
+const CHATGPT_PLUS_PLAN: SubscriptionPlanDefinition = {
+  key: 'chatgpt-plus',
+  planName: 'ChatGPT Plus',
+  monthlyPriceUSD: 20,
+  apiEquivalentCostUSD:
+    CHATGPT_PRO_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
+  note: '20 美元档按同一订阅族的 20× 比例折合 125 美元 API 用量；100 美元 5× 档成本效率相同，因此不重复建盒。',
+};
+
+const CHATGPT_PRO_20X_PLAN: SubscriptionPlanDefinition = {
+  key: 'chatgpt-pro-20x',
+  planName: 'ChatGPT Pro 20×',
+  monthlyPriceUSD: 200,
+  apiEquivalentCostUSD: CHATGPT_PRO_20X_API_EQUIVALENT_USD,
+  note: '200 美元档按社区实测的近似量级取整为 2500 美元 API 等价值。',
+};
+
+const CLAUDE_PRO_PLAN: SubscriptionPlanDefinition = {
+  key: 'claude-pro',
+  planName: 'Claude Pro',
+  monthlyPriceUSD: 20,
+  apiEquivalentCostUSD:
+    CLAUDE_MAX_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
+  note: '20 美元档按同一订阅族的 20× 比例折合 80 美元 API 用量；100 美元 5× 档成本效率相同，因此不重复建盒。',
+};
+
+const CLAUDE_MAX_20X_PLAN: SubscriptionPlanDefinition = {
+  key: 'claude-max-20x',
+  planName: 'Claude Max 20×',
+  monthlyPriceUSD: 200,
+  apiEquivalentCostUSD: CLAUDE_MAX_20X_API_EQUIVALENT_USD,
+  note: '200 美元档按社区实测的近似量级取整为 1600 美元 API 等价值。',
+};
+
+const GOOGLE_AI_PRO_PLAN: SubscriptionPlanDefinition = {
+  key: 'google-ai-pro',
+  planName: 'Google AI Pro',
+  monthlyPriceUSD: 20,
+  apiEquivalentCostUSD:
+    GOOGLE_AI_ULTRA_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
+  note: '20 美元档结合社区实测用量与推理 token 换算，折合约 260 美元 Gemini API 用量。',
+};
+
+const GOOGLE_AI_ULTRA_20X_PLAN: SubscriptionPlanDefinition = {
+  key: 'google-ai-ultra-20x',
+  planName: 'Google AI Ultra 20×',
+  monthlyPriceUSD: 200,
+  apiEquivalentCostUSD: GOOGLE_AI_ULTRA_20X_API_EQUIVALENT_USD,
+  note: '200 美元 20× 档按与 Pro 相同的额度比例折合约 5200 美元 Gemini API 用量。',
+};
+
+const SUPERGROK_PLAN: SubscriptionPlanDefinition = {
+  key: 'supergrok',
+  planName: 'SuperGrok',
+  monthlyPriceUSD: 30,
+  apiEquivalentCostUSD: 150,
+  note: '社区实测的基础订阅额度折合约 150 美元 xAI API 用量；更高档位沿用相同成本效率，因此只保留这一档。',
+};
+
+const SUBSCRIPTION_CONFIGURATION_TARGETS:
+  readonly SubscriptionConfigurationTarget[] = [
   {
-    key: 'subscription.chatgpt-plus.gpt-5-6-sol.max.codex-cli',
+    key: 'gpt-5-6-sol.max.codex-cli',
     basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
-    planName: 'ChatGPT Plus',
-    monthlyPriceUSD: 20,
-    apiEquivalentCostUSD:
-      CHATGPT_PRO_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
-    usableQuotaFraction: 1,
-    note: '按 20× 套餐反推，20 美元档折合 126.05 美元同模型 API 用量；100 美元 5× 档与其成本效率相同，因此不重复建盒。',
+    plans: [CHATGPT_PLUS_PLAN, CHATGPT_PRO_20X_PLAN],
   },
   {
-    key: 'subscription.chatgpt-pro-20x.gpt-5-6-sol.max.codex-cli',
-    basePresetId: 'builtin.harness.gpt-5-6-sol.max.codex-cli',
-    planName: 'ChatGPT Pro 20×',
-    monthlyPriceUSD: 200,
-    apiEquivalentCostUSD: CHATGPT_PRO_20X_API_EQUIVALENT_USD,
-    usableQuotaFraction: 1,
-    note: '订阅额度折合 2521 美元同模型 API 用量；整份额度均可用于该配置。',
+    key: 'gpt-5-6-terra.max.codex-cli',
+    basePresetId: 'builtin.harness.gpt-5-6-terra.max.codex-cli',
+    plans: [CHATGPT_PLUS_PLAN],
   },
   {
-    key: 'subscription.claude-pro.claude-fable-5.max.claude-code',
+    key: 'gpt-5-6-luna.max.codex-cli',
+    basePresetId: 'builtin.harness.gpt-5-6-luna.max.codex-cli',
+    plans: [CHATGPT_PLUS_PLAN],
+  },
+  {
+    key: 'claude-fable-5.max.claude-code',
     basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
-    planName: 'Claude Pro',
-    monthlyPriceUSD: 20,
-    apiEquivalentCostUSD:
-      CLAUDE_MAX_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
+    plans: [CLAUDE_PRO_PLAN, CLAUDE_MAX_20X_PLAN],
     usableQuotaFraction: 0.5,
-    note: '按 20× 套餐反推，20 美元档总额度折合 79.9 美元 API 用量；100 美元 5× 档与其成本效率相同，不重复建盒。Fable 5 仍只可使用其中 50%。',
+    note: 'Fable 5 仅可使用该计划总额度的 50%；实用分按折后可用额度计算。',
   },
   {
-    key: 'subscription.claude-max-20x.claude-fable-5.max.claude-code',
-    basePresetId: 'builtin.harness.claude-fable-5.max.claude-code',
-    planName: 'Claude Max 20×',
-    monthlyPriceUSD: 200,
-    apiEquivalentCostUSD: CLAUDE_MAX_20X_API_EQUIVALENT_USD,
-    usableQuotaFraction: 0.5,
-    note: '订阅总额度折合 1598 美元 API 用量；Fable 5 仅可使用其中 50%，即 799 美元等价值。',
-  },
-  {
-    key: 'subscription.claude-pro.claude-opus-5.max.claude-code',
+    key: 'claude-opus-5.max.claude-code',
     basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
-    planName: 'Claude Pro',
-    monthlyPriceUSD: 20,
-    apiEquivalentCostUSD:
-      CLAUDE_MAX_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
-    usableQuotaFraction: 1,
-    note: '按 20× 套餐反推，20 美元档折合 79.9 美元 API 用量；100 美元 5× 档与其成本效率相同，不重复建盒。Opus 5 可使用完整额度。',
+    plans: [CLAUDE_PRO_PLAN, CLAUDE_MAX_20X_PLAN],
   },
   {
-    key: 'subscription.claude-max-20x.claude-opus-5.max.claude-code',
-    basePresetId: 'builtin.harness.claude-opus-5.max.claude-code',
-    planName: 'Claude Max 20×',
-    monthlyPriceUSD: 200,
-    apiEquivalentCostUSD: CLAUDE_MAX_20X_API_EQUIVALENT_USD,
-    usableQuotaFraction: 1,
-    note: '订阅总额度折合 1598 美元 API 用量；Opus 5 没有 Fable 5 的 50% 限制，可使用完整额度。',
+    key: 'claude-sonnet-5.max.arena-agent-mode',
+    basePresetId: 'builtin.agent.arena.claude-sonnet-5.max',
+    plans: [CLAUDE_PRO_PLAN],
+  },
+  {
+    key: 'claude-sonnet-4-6.max.claude-code',
+    basePresetId: 'builtin.harness.claude-sonnet-4-6.max.claude-code',
+    plans: [CLAUDE_PRO_PLAN],
+  },
+  {
+    key: 'claude-haiku-4-5.max.chat',
+    basePresetId: 'builtin.data-md.claude-haiku-4-5.max.vertex',
+    plans: [CLAUDE_PRO_PLAN],
+  },
+  {
+    key: 'gemini-3-1-pro.high.gemini-cli',
+    basePresetId: 'builtin.harness.gemini-3-1-pro.high.gemini-cli',
+    plans: [GOOGLE_AI_PRO_PLAN, GOOGLE_AI_ULTRA_20X_PLAN],
+  },
+  {
+    key: 'gemini-3-6-flash.high.chat',
+    basePresetId: 'builtin.data-md.gemini-3-6-flash.high.ai-studio',
+    plans: [GOOGLE_AI_PRO_PLAN, GOOGLE_AI_ULTRA_20X_PLAN],
+  },
+  {
+    key: 'gemini-3-5-flash.high.arena-agent-mode',
+    basePresetId: 'builtin.agent.arena.gemini-3-5-flash.high',
+    plans: [GOOGLE_AI_PRO_PLAN, GOOGLE_AI_ULTRA_20X_PLAN],
+  },
+  {
+    key: 'gemini-3-5-flash-lite.high.chat',
+    basePresetId: 'builtin.data-md.gemini-3-5-flash-lite.high.ai-studio',
+    plans: [GOOGLE_AI_PRO_PLAN, GOOGLE_AI_ULTRA_20X_PLAN],
+  },
+  {
+    key: 'gemini-3-1-flash-lite-preview.max.chat',
+    basePresetId:
+      'builtin.source-catalog.source-profile-gemini-3-1-flash-lite-preview.gemini-3-1-flash-lite-preview',
+    plans: [GOOGLE_AI_PRO_PLAN, GOOGLE_AI_ULTRA_20X_PLAN],
+  },
+  {
+    key: 'grok-4-5.high.grok-build',
+    basePresetId: 'builtin.harness.grok-4-5.high.grok-build',
+    plans: [SUPERGROK_PLAN],
+  },
+  {
+    key: 'grok-build-0-1.max.arena-agent-mode',
+    basePresetId: 'builtin.agent.arena.grok-build-0-1.max',
+    plans: [SUPERGROK_PLAN],
+  },
+  {
+    key: 'grok-4-3.high.chat',
+    basePresetId:
+      'builtin.source-catalog.source-profile-grok-4-3-high.grok-4-3-high',
+    plans: [SUPERGROK_PLAN],
   },
 ];
+
+const SUBSCRIPTION_CONFIGURATION_SPECS: readonly SubscriptionConfigurationSpec[] =
+  SUBSCRIPTION_CONFIGURATION_TARGETS.flatMap((target) => target.plans.map((plan) => ({
+    key: `subscription.${plan.key}.${target.key}`,
+    basePresetId: target.basePresetId,
+    planName: plan.planName,
+    monthlyPriceUSD: plan.monthlyPriceUSD,
+    apiEquivalentCostUSD: plan.apiEquivalentCostUSD,
+    usableQuotaFraction: target.usableQuotaFraction ?? 1,
+    note: [plan.note, target.note].filter(Boolean).join(' '),
+  })));
 
 /**
  * A subscription is a separate model+harness+access configuration. Capability
@@ -3581,4 +3696,4 @@ export const BUILT_IN_CONFIGURATION_PRESET_COUNT = BUILT_IN_CONFIGURATION_PRESET
  * additions visible during Vite hot updates as well as after a full reload.
  */
 export const BUILT_IN_CONFIGURATION_PRESET_INVENTORY_VERSION =
-  '2026-07-29-expand-subscription-routes-v29';
+  '2026-07-29-first-party-subscription-routes-v30';
