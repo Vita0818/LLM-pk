@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "generate:public-snapshot": "esbuild scripts/generatePublicLeaderboardSnapshot.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-generate-public-snapshot.mjs && node /tmp/llmpk-generate-public-snapshot.mjs",
+    "verify:public-bundle": "node scripts/verifyPublicBundle.mjs",
+    "build": "npm run generate:public-snapshot && tsc -b && vite build && npm run verify:public-bundle",
     "test": "npm run test:scoring && npm run test:admin-mapping && npm run test:scope",
     "test:scoring": "esbuild scripts/scoringEngine.test.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-scoring-engine.test.mjs && node /tmp/llmpk-scoring-engine.test.mjs",
     "test:admin-mapping": "esbuild scripts/adminMappingStore.test.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-admin-mapping-store.test.mjs && node /tmp/llmpk-admin-mapping-store.test.mjs",

@@ -1,21 +1,19 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Search,
   ArrowUpRight,
   ArrowUpDown,
-  CheckCircle2,
-  RefreshCw,
 } from 'lucide-react';
-import { adminMappingStore } from './store/adminMappingStore';
 import { DOMAIN_DEFINITIONS, ALL_METRIC_DEFINITIONS } from './engine/scoringEngine';
 import { DETAIL_ONLY_METRIC_DEFINITIONS } from './data/detailMetricDefinitions';
 import { getCompactMetricName } from './data/compactMetricNames';
-import { ProcessedConfigurationScore, DomainId, LLMConfiguration } from './types/llm_pk';
+import publicLeaderboardSnapshot from './data/publicLeaderboardSnapshot.json';
+import { DomainId } from './types/llm_pk';
+import type {
+  PublicLeaderboardScore,
+  PublicLeaderboardSnapshot,
+} from './types/publicLeaderboard';
 import { RadarChart } from './components/RadarChart';
-import { AdminMappingView } from './components/AdminMappingView';
-import { syncLatestCohortData } from './services/dataFetcher';
-import type { BuiltInConfigurationPresetInstallReport } from './types/admin_mapping';
-import { BUILT_IN_CONFIGURATION_PRESET_INVENTORY_VERSION } from './data/builtInConfigurationPresets';
 import {
   formatPracticalAdjustment,
   getPracticalAdjustment,
@@ -23,6 +21,10 @@ import {
 } from './utils/practicalAdjustment';
 
 type SortKey = 'rawCapabilityScore' | 'practicalAdjustment' | DomainId;
+
+const PUBLIC_SCORES = (
+  publicLeaderboardSnapshot as unknown as PublicLeaderboardSnapshot
+).scores;
 
 const formatRawMetricValue = (val: number | null | undefined, unit?: string) => {
   if (val === null || val === undefined || isNaN(val)) return '--';
@@ -72,40 +74,13 @@ const getDomainDef = (dId: string) => {
  * - Header Pill Navbar: bg-neutral-100 rounded-[1.5rem] with bg-black active pill
  */
 export const VercelAestheticPreview: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'leaderboard' | 'detail' | 'admin'>('leaderboard');
+  const [activeTab, setActiveTab] = useState<'leaderboard' | 'detail'>('leaderboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedConfigId, setSelectedConfigId] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'reasoning' | 'top'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('rawCapabilityScore');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncDone, setSyncDone] = useState(false);
-  const [presetInstallReport, setPresetInstallReport] =
-    useState<BuiltInConfigurationPresetInstallReport | null>(null);
-  const initialPresetInstallReport = useRef<BuiltInConfigurationPresetInstallReport | null>(null);
-
-  useEffect(() => {
-    adminMappingStore.resetToLatestVerifiedCatalog();
-    const report = adminMappingStore.synchronizeBuiltInConfigurationPresets();
-
-    if (
-      report.installedBoxCount > 0
-      || report.removedBuiltInBoxCount > 0
-      || report.removedRetiredLegacyBoxCount > 0
-      || !initialPresetInstallReport.current
-    ) {
-      initialPresetInstallReport.current = report;
-      setPresetInstallReport(report);
-    }
-
-    setRefreshTrigger((previous) => previous + 1);
-  }, [BUILT_IN_CONFIGURATION_PRESET_INVENTORY_VERSION]);
-
-  // Compute leaderboard scores dynamically
-  const scores: ProcessedConfigurationScore[] = useMemo(() => {
-    return adminMappingStore.computeLeaderboardScores();
-  }, [refreshTrigger]);
+  const scores: PublicLeaderboardScore[] = PUBLIC_SCORES;
 
   // Filtered scores
   const filteredScores = useMemo(() => {
@@ -183,26 +158,6 @@ export const VercelAestheticPreview: React.FC = () => {
     };
   };
 
-  const handleSyncLiveData = async () => {
-    if (isSyncing) return;
-
-    setIsSyncing(true);
-    setSyncDone(false);
-    try {
-      const existingConfigs: LLMConfiguration[] = adminMappingStore.boxes.map((box) =>
-        adminMappingStore.buildLLMConfiguration(box)
-      );
-      const result = await syncLatestCohortData(existingConfigs);
-      if (result.success) {
-        setRefreshTrigger((previous) => previous + 1);
-        setSyncDone(true);
-        window.setTimeout(() => setSyncDone(false), 3000);
-      }
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortOrder((current) => current === 'desc' ? 'asc' : 'desc');
@@ -242,24 +197,11 @@ export const VercelAestheticPreview: React.FC = () => {
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 shadow-2xs">
         <div className="max-w-[1500px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
           {/* Clean Website Name Only */}
-          <a href="/" className="font-brand-mono text-3xl font-black text-neutral-950 tracking-tight select-none hover:opacity-90 transition-opacity">
+          <a href={import.meta.env.BASE_URL} className="font-brand-mono text-3xl font-black text-neutral-950 tracking-tight select-none hover:opacity-90 transition-opacity">
             LLMpk
           </a>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleSyncLiveData}
-              disabled={isSyncing}
-              className="hidden lg:flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3.5 py-2 text-xs font-bold text-neutral-700 transition-colors hover:bg-neutral-100 disabled:cursor-wait disabled:opacity-60"
-            >
-              {syncDone ? (
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-              ) : (
-                <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              )}
-              {isSyncing ? '同步中' : '同步'}
-            </button>
-
             {/* Navigation Pill Bar */}
             <nav className="bg-neutral-100/90 rounded-[1.5rem] p-1 flex items-center gap-0.5 border border-neutral-200/60 shadow-sm">
               <button
@@ -284,16 +226,6 @@ export const VercelAestheticPreview: React.FC = () => {
                 配置分析
               </button>
 
-              <button
-                onClick={() => setActiveTab('admin')}
-                className={`rounded-3xl px-4 py-2 text-xs transition-colors ${
-                  activeTab === 'admin'
-                    ? 'bg-black text-white shadow-sm font-bold'
-                    : 'text-neutral-700 hover:text-black hover:bg-neutral-200/60 font-semibold'
-                }`}
-              >
-                后台配置
-              </button>
             </nav>
           </div>
         </div>
@@ -610,15 +542,6 @@ export const VercelAestheticPreview: React.FC = () => {
           </div>
         )}
 
-        {/* VIEW 3: ADMIN MAPPING VIEW */}
-        {activeTab === 'admin' && (
-          <div className="space-y-6">
-            <AdminMappingView
-              onRefreshLeaderboard={() => setRefreshTrigger((prev) => prev + 1)}
-              builtInPresetInstallReport={presetInstallReport}
-            />
-          </div>
-        )}
       </main>
     </div>
   );
