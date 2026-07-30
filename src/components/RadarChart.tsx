@@ -16,6 +16,7 @@ interface RadarChartProps {
   showLegend?: boolean;
   hoveredDomain?: DomainId | null;
   onHoverDomain?: (domain: DomainId | null) => void;
+  showDomainNames?: boolean;
 }
 
 const DOMAIN_ORDER: DomainId[] = [
@@ -33,6 +34,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   showLegend = true,
   hoveredDomain: controlledHoveredDomain,
   onHoverDomain,
+  showDomainNames = true,
 }) => {
   const [internalHoveredDomain, setInternalHoveredDomain] = useState<DomainId | null>(null);
   const hoveredDomain = controlledHoveredDomain !== undefined ? controlledHoveredDomain : internalHoveredDomain;
@@ -297,8 +299,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({
                   <title>{`${def.name}: ${hasScore ? `${scoreVal.toFixed(1)}分` : '无数据'}`}</title>
                 </text>
 
-                {/* Line 2 & 3: Full English Domain Name split gracefully */}
-                {domainLines.map((line, lIdx) => (
+                {/* Line 2 & 3: Full English Domain Name (Only rendered if showDomainNames is true) */}
+                {showDomainNames && domainLines.map((line, lIdx) => (
                   <text
                     key={`line-${lIdx}`}
                     x={lx}

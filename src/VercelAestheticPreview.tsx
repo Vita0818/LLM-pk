@@ -487,6 +487,7 @@ export const VercelAestheticPreview: React.FC = () => {
                         ]}
                         size={270}
                         showLegend={false}
+                        showDomainNames={false}
                       />
                     </div>
                   </div>
