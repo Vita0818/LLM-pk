@@ -75,7 +75,8 @@ const getDomainDef = (dId: string) => {
  * - Header Pill Navbar: bg-neutral-100 rounded-[1.5rem] with bg-black active pill
  */
 export const VercelAestheticPreview: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'leaderboard' | 'detail'>('leaderboard');
+  const [activeTab, setActiveTab] = useState<'leaderboard' | 'overview' | 'detail'>('leaderboard');
+  const [lastMainTab, setLastMainTab] = useState<'leaderboard' | 'overview'>('leaderboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedConfigId, setSelectedConfigId] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'reasoning' | 'top'>('all');
@@ -223,18 +224,50 @@ export const VercelAestheticPreview: React.FC = () => {
               LLMpk
             </a>
 
-            {/* Minimalist Pure Circular Back Button (hidden on homepage, visible on detail page) */}
+            {/* Minimalist Pure Circular Back Button (hidden on homepage/overview, visible on detail page) */}
             {activeTab === 'detail' && (
               <button
-                onClick={() => setActiveTab('leaderboard')}
+                onClick={() => setActiveTab(lastMainTab)}
                 className="w-8 h-8 rounded-full border border-neutral-200 bg-neutral-100/90 hover:bg-black hover:border-black text-neutral-700 hover:text-white flex items-center justify-center transition-all shadow-2xs shrink-0"
-                title="返回全量榜单"
-                aria-label="返回全量榜单"
+                title="返回"
+                aria-label="返回"
               >
                 <ArrowLeft className="w-4 h-4 text-current shrink-0" />
               </button>
             )}
           </div>
+
+          {/* Top Right Main Tab Switcher (Leaderboard vs Radar Overview) */}
+          {activeTab !== 'detail' && (
+            <div className="flex items-center p-1 bg-neutral-100/90 rounded-full border border-neutral-200/80 text-xs font-bold font-brand-mono">
+              <button
+                onClick={() => {
+                  setActiveTab('leaderboard');
+                  setLastMainTab('leaderboard');
+                }}
+                className={`px-3.5 py-1.5 rounded-full transition-all ${
+                  activeTab === 'leaderboard'
+                    ? 'bg-black text-white shadow-2xs'
+                    : 'text-neutral-600 hover:text-neutral-950'
+                }`}
+              >
+                全量榜单
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('overview');
+                  setLastMainTab('overview');
+                }}
+                className={`px-3.5 py-1.5 rounded-full transition-all ${
+                  activeTab === 'overview'
+                    ? 'bg-black text-white shadow-2xs'
+                    : 'text-neutral-600 hover:text-neutral-950'
+                }`}
+              >
+                雷达图总览
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -380,7 +413,126 @@ export const VercelAestheticPreview: React.FC = () => {
           </div>
         )}
 
-        {/* VIEW 2: RADAR & CONFIGURATION DETAIL */}
+        {/* VIEW 2: RADAR OVERVIEW GALLERY (4 PER ROW) */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6 font-brand-mono">
+            {/* Page Title & Counter */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2 border-b border-neutral-200/80">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight">
+                  模型能力雷达谱图总览
+                </h2>
+                <p className="text-xs sm:text-sm font-medium text-neutral-500 mt-0.5">
+                  全量展示 {filteredScores.length} 款 AI 模型的 6 维核心能力雷达指纹与实测偏置
+                </p>
+              </div>
+
+              <div className="text-xs font-bold text-neutral-600 bg-neutral-100 px-3 py-1.5 rounded-full border border-neutral-200 shrink-0">
+                共计 {filteredScores.length} 项评估模型
+              </div>
+            </div>
+
+            {/* 4-Per-Row Grid Layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              {filteredScores.map((item, index) => {
+                const rank = item.eligibleForGlobalLeaderboard
+                  ? filteredScores
+                      .slice(0, index + 1)
+                      .filter((score) => score.eligibleForGlobalLeaderboard).length
+                  : null;
+                const parsed = parseConfigName(item.config.name);
+                const capabilityScore = item.rawCapabilityScore;
+                const practicalAdjustment = getPracticalAdjustment(item.practicalBreakdown);
+
+                return (
+                  <div
+                    key={item.config.id}
+                    onClick={() => {
+                      setSelectedConfigId(item.config.id);
+                      setActiveTab('detail');
+                    }}
+                    className="group relative flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-4 transition-all duration-200 hover:border-neutral-950 hover:shadow-md cursor-pointer"
+                  >
+                    {/* Header: Rank + Model 3-Part Name */}
+                    <div className="space-y-1.5 pb-2 border-b border-neutral-100">
+                      <div className="flex items-center justify-between gap-2">
+                        {/* Rank Badge */}
+                        <div className="font-bold text-neutral-500 text-xs">
+                          {rank === 1 ? (
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-purple-900 text-white text-[11px] font-black shadow-2xs">#1</span>
+                          ) : rank === 2 ? (
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-neutral-200 text-neutral-900 text-[11px] font-bold">#2</span>
+                          ) : rank === 3 ? (
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-800 border border-neutral-300 text-[11px] font-bold">#3</span>
+                          ) : rank !== null ? (
+                            <span className="text-neutral-500 font-bold">#{rank}</span>
+                          ) : (
+                            <span className="text-neutral-300">—</span>
+                          )}
+                        </div>
+
+                        {/* Score Pill */}
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="font-black text-neutral-950 text-sm">{formatScore(capabilityScore)}</span>
+                          <span className="text-[10px] text-neutral-500 font-medium">
+                            (
+                            <span className={practicalAdjustmentTextClass(practicalAdjustment)}>
+                              {formatPracticalAdjustment(practicalAdjustment)}
+                            </span>
+                            )
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Model Configuration Name */}
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="font-extrabold text-neutral-950 text-sm group-hover:text-purple-900 transition-colors truncate">
+                          {parsed.model}
+                        </div>
+                        <div className="flex items-center gap-1 text-[11px] font-medium text-neutral-500 truncate">
+                          <span className="truncate">{parsed.harness}</span>
+                          <span className="text-neutral-300 font-normal shrink-0">|</span>
+                          <span className="truncate">{parsed.provider}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Compact Radar Chart (Centered inside card) */}
+                    <div className="py-3 flex items-center justify-center">
+                      <RadarChart
+                        seriesList={[
+                          {
+                            id: item.config.id,
+                            name: item.config.name,
+                            color: '#6B21A8',
+                            scores: {
+                              chatting: item.domainScores?.chatting?.score ?? null,
+                              math_science: item.domainScores?.math_science?.score ?? null,
+                              coding: item.domainScores?.coding?.score ?? null,
+                              engineering: item.domainScores?.engineering?.score ?? null,
+                              agentic_work: item.domainScores?.agentic_work?.score ?? null,
+                              search_knowledge: item.domainScores?.search_knowledge?.score ?? null,
+                            },
+                          },
+                        ]}
+                        size={270}
+                        showLegend={false}
+                      />
+                    </div>
+
+                    {/* Footer View Action Button */}
+                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500 font-bold group-hover:text-black transition-colors">
+                      <span>查看完整维度分析</span>
+                      <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* VIEW 3: RADAR & CONFIGURATION DETAIL */}
         {activeTab === 'detail' && selectedScoreItem && (
           <div className="space-y-4">
             {/* Header Area directly on background WITHOUT grey bottom border */}
