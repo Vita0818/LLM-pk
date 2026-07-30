@@ -416,22 +416,6 @@ export const VercelAestheticPreview: React.FC = () => {
         {/* VIEW 2: RADAR OVERVIEW GALLERY (4 PER ROW) */}
         {activeTab === 'overview' && (
           <div className="space-y-6 font-brand-mono">
-            {/* Page Title & Counter */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-2 border-b border-neutral-200/80">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-black text-neutral-950 tracking-tight">
-                  模型能力雷达谱图总览
-                </h2>
-                <p className="text-xs sm:text-sm font-medium text-neutral-500 mt-0.5">
-                  全量展示 {filteredScores.length} 款 AI 模型的 6 维核心能力雷达指纹与实测偏置
-                </p>
-              </div>
-
-              <div className="text-xs font-bold text-neutral-600 bg-neutral-100 px-3 py-1.5 rounded-full border border-neutral-200 shrink-0">
-                共计 {filteredScores.length} 项评估模型
-              </div>
-            </div>
-
             {/* 4-Per-Row Grid Layout */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {filteredScores.map((item, index) => {
@@ -451,27 +435,14 @@ export const VercelAestheticPreview: React.FC = () => {
                       setSelectedConfigId(item.config.id);
                       setActiveTab('detail');
                     }}
-                    className="group relative flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-4 transition-all duration-200 hover:border-neutral-950 hover:shadow-md cursor-pointer"
+                    className="group relative flex flex-col justify-between rounded-2xl border border-neutral-200/80 bg-white p-4 transition-all duration-200 hover:border-black hover:shadow-md cursor-pointer"
                   >
-                    {/* Header: Rank + Model 3-Part Name */}
-                    <div className="space-y-1.5 pb-2 border-b border-neutral-100">
+                    {/* Header: Rank + Model Configuration */}
+                    <div className="space-y-1">
                       <div className="flex items-center justify-between gap-2">
-                        {/* Rank Badge */}
-                        <div className="font-bold text-neutral-500 text-xs">
-                          {rank === 1 ? (
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-purple-900 text-white text-[11px] font-black shadow-2xs">#1</span>
-                          ) : rank === 2 ? (
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-neutral-200 text-neutral-900 text-[11px] font-bold">#2</span>
-                          ) : rank === 3 ? (
-                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-800 border border-neutral-300 text-[11px] font-bold">#3</span>
-                          ) : rank !== null ? (
-                            <span className="text-neutral-500 font-bold">#{rank}</span>
-                          ) : (
-                            <span className="text-neutral-300">—</span>
-                          )}
-                        </div>
-
-                        {/* Score Pill */}
+                        <span className="font-black text-neutral-400 text-xs">
+                          {rank !== null ? `#${rank}` : '—'}
+                        </span>
                         <div className="flex items-center gap-1 text-xs">
                           <span className="font-black text-neutral-950 text-sm">{formatScore(capabilityScore)}</span>
                           <span className="text-[10px] text-neutral-500 font-medium">
@@ -484,8 +455,7 @@ export const VercelAestheticPreview: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Model Configuration Name */}
-                      <div className="space-y-0.5 min-w-0">
+                      <div className="min-w-0">
                         <div className="font-extrabold text-neutral-950 text-sm group-hover:text-purple-900 transition-colors truncate">
                           {parsed.model}
                         </div>
@@ -498,7 +468,7 @@ export const VercelAestheticPreview: React.FC = () => {
                     </div>
 
                     {/* Compact Radar Chart (Centered inside card) */}
-                    <div className="py-3 flex items-center justify-center">
+                    <div className="py-2 flex items-center justify-center">
                       <RadarChart
                         seriesList={[
                           {
@@ -518,12 +488,6 @@ export const VercelAestheticPreview: React.FC = () => {
                         size={270}
                         showLegend={false}
                       />
-                    </div>
-
-                    {/* Footer View Action Button */}
-                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500 font-bold group-hover:text-black transition-colors">
-                      <span>查看完整维度分析</span>
-                      <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </div>
                   </div>
                 );
