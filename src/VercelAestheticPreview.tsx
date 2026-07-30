@@ -435,7 +435,7 @@ export const VercelAestheticPreview: React.FC = () => {
                       setSelectedConfigId(item.config.id);
                       setActiveTab('detail');
                     }}
-                    className="group relative flex flex-col justify-between rounded-2xl border border-neutral-200/80 bg-white p-4 transition-all duration-200 hover:border-black hover:shadow-md cursor-pointer"
+                    className="group relative flex flex-col justify-between py-2 transition-opacity duration-150 cursor-pointer hover:opacity-85"
                   >
                     {/* Header: Rank + Model Configuration */}
                     <div className="space-y-1">
