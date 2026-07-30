@@ -238,6 +238,50 @@ export const RadarChart: React.FC<RadarChartProps> = ({
             const lx = center + labelRadius * Math.cos(angle);
             const ly = center + labelRadius * Math.sin(angle);
 
+            // ISOLATED OVERVIEW MODE (showDomainNames === false): Pure Vertex Numeric Scores
+            if (!showDomainNames) {
+              const overviewRadius = radius + 15;
+              const olx = center + overviewRadius * Math.cos(angle);
+              const oly = center + overviewRadius * Math.sin(angle);
+
+              let oAnchor: 'start' | 'middle' | 'end' = 'middle';
+              if (Math.abs(angle - (-Math.PI / 2)) < 0.1 || Math.abs(angle - (Math.PI / 2)) < 0.1) {
+                oAnchor = 'middle';
+              } else if (Math.cos(angle) > 0) {
+                oAnchor = 'start';
+              } else {
+                oAnchor = 'end';
+              }
+
+              const oScoreFontSize = Math.max(11, Math.round(size / 24));
+
+              return (
+                <g
+                  key={`vertex-score-${dId}`}
+                  className="cursor-pointer group"
+                  onMouseEnter={() => handleSetHoveredDomain(dId)}
+                  onMouseLeave={() => handleSetHoveredDomain(null)}
+                >
+                  <text
+                    x={olx}
+                    y={oly}
+                    fill={def.color}
+                    fontSize={oScoreFontSize}
+                    fontWeight="900"
+                    fontFamily="'JetBrains Mono', monospace"
+                    textAnchor={oAnchor}
+                    dominantBaseline="central"
+                    className="font-brand-mono select-none transition-all drop-shadow-2xs"
+                    opacity={isHovered ? 1 : 0.95}
+                  >
+                    {hasScore ? scoreVal.toFixed(1) : '--'}
+                    <title>{`${def.name}: ${hasScore ? `${scoreVal.toFixed(1)}分` : '无数据'}`}</title>
+                  </text>
+                </g>
+              );
+            }
+
+            // ORIGINAL DETAIL MODE (showDomainNames === true): 100% Untouched
             const scoreFontSize = Math.max(14, Math.round(size / 26));
             const labelFontSize = Math.max(9, Math.round(scoreFontSize * 0.62));
             const lineGap = labelFontSize * 1.35;
@@ -299,8 +343,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({
                   <title>{`${def.name}: ${hasScore ? `${scoreVal.toFixed(1)}分` : '无数据'}`}</title>
                 </text>
 
-                {/* Line 2 & 3: Full English Domain Name (Only rendered if showDomainNames is true) */}
-                {showDomainNames && domainLines.map((line, lIdx) => (
+                {/* Line 2 & 3: Full English Domain Name */}
+                {domainLines.map((line, lIdx) => (
                   <text
                     key={`line-${lIdx}`}
                     x={lx}
