@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Trophy, PieChart, Box, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Trophy, Columns, PieChart, Box, RefreshCw, CheckCircle2, Play } from 'lucide-react';
 import { CohortSnapshot } from '../types/llm_pk';
 
-export type ViewPage = 'leaderboard' | 'model_summary' | 'admin_mapping';
+export type ViewPage = 'leaderboard' | 'side_by_side' | 'model_summary' | 'admin_mapping';
 
 interface NavbarProps {
   activePage: ViewPage;
   onSelectPage: (page: ViewPage) => void;
   cohort: CohortSnapshot;
   onSyncLiveData?: () => Promise<void>;
+  onStartPlayMode?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,6 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectPage,
   cohort,
   onSyncLiveData,
+  onStartPlayMode,
 }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncDone, setSyncDone] = useState(false);
@@ -83,6 +85,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               <button
+                onClick={() => onSelectPage('side_by_side')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                  activePage === 'side_by_side'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Columns className="w-3.5 h-3.5" />
+                <span>并排对比</span>
+              </button>
+
+              <button
                 onClick={() => onSelectPage('model_summary')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                   activePage === 'model_summary'
@@ -106,6 +120,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>后台数据映射</span>
               </button>
             </nav>
+
+            {onStartPlayMode && (
+              <button
+                onClick={onStartPlayMode}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all shadow-sm shrink-0 cursor-pointer"
+                title="开启播放模式（从倒数第一开始，每个模型在配置页面停留 5 秒，直到第 1 名停止）"
+              >
+                <Play className="w-3.5 h-3.5 text-emerald-400 fill-current" />
+                <span>播放模式</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -36,6 +36,10 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Recording playback is intentionally local-only. The public site
+          # receives the same current data without the playback interface.
+          VITE_ENABLE_PLAY_MODE: 'false'
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6

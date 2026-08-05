@@ -65,6 +65,7 @@ import {
   type BuiltInConfigurationPreset,
 } from '../data/builtInConfigurationPresets';
 import { getEmbeddedConfidenceRadius } from '../data/metricUncertainty';
+import { getOpenRouterPromotionalPricing } from '../data/openRouterPromotionalPricing';
 
 /**
  * A schema bump is intentionally paired with a source-catalog fingerprint.
@@ -2388,14 +2389,25 @@ export class AdminMappingStore {
     const builtInPreset = builtInPresetId
       ? BUILT_IN_CONFIGURATION_PRESETS.find((preset) => preset.id === builtInPresetId)
       : undefined;
-    const subscriptionData = (
-      builtInPreset?.access === 'subscription'
+    const isUnchangedBuiltInPreset = Boolean(
+      builtInPreset
       && sameConfigurationIdentity(
         configurationIdentity,
         sanitizeConfigurationIdentity(builtInPreset.identity),
-      )
+      ),
+    );
+    const subscriptionData = (
+      builtInPreset?.access === 'subscription'
+      && isUnchangedBuiltInPreset
     )
       ? sanitizeSubscriptionCostData(builtInPreset.subscriptionData)
+      : undefined;
+    const promotionalPricing = (
+      builtInPreset
+      && isUnchangedBuiltInPreset
+      && (builtInPreset.access === 'api' || builtInPreset.access === 'subscription')
+    )
+      ? getOpenRouterPromotionalPricing(builtInPreset.productLineId)
       : undefined;
     const observationsMap: Record<string, MetricObservation> = {};
 
@@ -2430,9 +2442,11 @@ export class AdminMappingStore {
       });
 
     // OpenRouter is preferred for provider-neutral price and performance.
-    // When the exact model is absent there, the same model's Artificial
-    // Analysis price and median performance fill only the missing practical
-    // slots. Capability observations remain unaffected.
+    // A current, source-backed OpenRouter promotion for an unchanged shipped
+    // route takes precedence over an older snapshot price. When the exact
+    // model is absent there, the same model's Artificial Analysis price and
+    // median performance fill only the missing practical slots. Capability
+    // observations remain unaffected.
     const openRouterByMetric = new Map<string, SourceObservation>();
     linkedStack
       .filter(({ card }) => card.source === 'openrouter')
@@ -2461,8 +2475,10 @@ export class AdminMappingStore {
       ?? artificialAnalysisPracticalByMetric.get('aa_ttft_median');
     const throughputObservation = openRouterByMetric.get('or_throughput_p50')
       ?? artificialAnalysisPracticalByMetric.get('aa_throughput_median');
-    const inputPrice = inputPriceObservation?.rawValue;
-    const outputPrice = outputPriceObservation?.rawValue;
+    const inputPrice = promotionalPricing?.effectiveInputPricePerMToken
+      ?? inputPriceObservation?.rawValue;
+    const outputPrice = promotionalPricing?.effectiveOutputPricePerMToken
+      ?? outputPriceObservation?.rawValue;
     const latencySeconds = secondsFromLatencyObservation(latencyObservation);
     const throughput = throughputObservation?.rawValue;
     const hasVerifiedPracticalData =

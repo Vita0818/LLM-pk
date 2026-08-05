@@ -15,6 +15,7 @@ import { DOMAIN_DEFINITIONS } from '../engine/scoringEngine';
 import { COVERAGE_STATUS_LABELS } from '../engine/scoringConfig';
 import { RadarChart, RadarSeries } from './RadarChart';
 import { ConfigNameDisplay } from './ConfigNameDisplay';
+import { getProviderBrandTheme } from '../utils/providerColors';
 import {
   formatPracticalAdjustment,
   getPracticalAdjustment,
@@ -44,19 +45,23 @@ export const PKComparisonView: React.FC<PKComparisonViewProps> = ({
     .filter((item): item is ProcessedConfigurationScore => item !== undefined);
 
   // Prepare Radar Series list
-  const radarSeriesList: RadarSeries[] = selectedItems.map((item, idx) => ({
-    id: item.config.id,
-    name: item.config.name,
-    color: SERIES_COLORS[idx % SERIES_COLORS.length],
-    scores: {
-      chatting: item.domainScores.chatting.score,
-      math_science: item.domainScores.math_science.score,
-      coding: item.domainScores.coding.score,
-      engineering: item.domainScores.engineering.score,
-      agentic_work: item.domainScores.agentic_work.score,
-      search_knowledge: item.domainScores.search_knowledge.score,
-    },
-  }));
+  const radarSeriesList: RadarSeries[] = selectedItems.map((item, idx) => {
+    const brandTheme = getProviderBrandTheme(item.config.provider);
+    return {
+      id: item.config.id,
+      name: item.config.name,
+      color: brandTheme.color,
+      fillColor: brandTheme.fillColor,
+      scores: {
+        chatting: item.domainScores.chatting.score,
+        math_science: item.domainScores.math_science.score,
+        coding: item.domainScores.coding.score,
+        engineering: item.domainScores.engineering.score,
+        agentic_work: item.domainScores.agentic_work.score,
+        search_knowledge: item.domainScores.search_knowledge.score,
+      },
+    };
+  });
 
   const domainList: DomainId[] = [
     'chatting',

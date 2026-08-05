@@ -16,6 +16,7 @@ import { ProcessedConfigurationScore, DomainId } from '../types/llm_pk';
 import { ALL_METRIC_DEFINITIONS, DOMAIN_DEFINITIONS } from '../engine/scoringEngine';
 import { COVERAGE_STATUS_LABELS, SCORING_CONFIG } from '../engine/scoringConfig';
 import { RadarChart, RadarSeries } from './RadarChart';
+import { getProviderBrandTheme } from '../utils/providerColors';
 import {
   formatPracticalAdjustment,
   getPracticalAdjustment,
@@ -68,11 +69,13 @@ export const ConfigurationDetailModal: React.FC<ConfigurationDetailModalProps> =
     search_knowledge: domainScores.search_knowledge.score,
   };
 
+  const brandTheme = getProviderBrandTheme(config.provider);
   const radarSeries: RadarSeries[] = [
     {
       id: config.id,
       name: config.name,
-      color: '#06B6D4', // Cyan
+      color: brandTheme.color,
+      fillColor: brandTheme.fillColor,
       scores: radarScoresMap,
     },
   ];

@@ -637,8 +637,28 @@ function apiRouteEffortPresets(input: {
  */
 const DATA_MD_CONFIGURATION_PRESETS_RAW: readonly BuiltInConfigurationPreset[] = [
   // Domestic Models
-  orcPreset({ key: 'data-md.deepseek-v4-flash.max', productLineId: 'deepseek_v4_flash', modelName: 'DeepSeek-v4-Flash', profile: DATA_MD_DEFAULT_REASONING, providerName: 'DeepSeek', upstreamApi: 'DeepSeek API', sourceCardIds: ['card-aa-deepseek-v4-flash', 'card-openrouter-deepseek-deepseek-v4-flash'] }),
-  orcPreset({ key: 'data-md.deepseek-v4-pro.max', productLineId: 'deepseek_v4_pro', modelName: 'DeepSeek-v4-Pro', profile: DATA_MD_DEFAULT_REASONING, providerName: 'DeepSeek', upstreamApi: 'DeepSeek API', sourceCardIds: ['card-aa-deepseek-v4-pro', 'card-openrouter-deepseek-deepseek-v4-pro'] }),
+  definePreset({
+    key: 'data-md.deepseek-v4-flash-0731.max',
+    productLineId: 'deepseek_v4_flash_0731',
+    identity: {
+      model: { name: 'DeepSeek V4 Flash 0731', profile: DATA_MD_DEFAULT_REASONING },
+      harness: normalChat('DeepSeek API'),
+      provider: { name: 'DeepSeek', upstream: 'DeepSeek API' },
+    },
+    origin: 'data-md',
+    access: 'api',
+    note: '正式版 0731 使用 Artificial Analysis 对 DeepSeek 官方 API 的 Max 能力、价格与性能实测；Arena WebDev 的 deepseek-v4-flash-high 链接 7 月 31 日官方 X 公告，以 High 低档兜底接入 Max。所有链接 4 月 24 日公告的文本榜数据仍归 Preview，不混入。',
+    sourceCardIds: ['card-aa-deepseek-v4-flash'],
+    sourceCardLinks: [lowerProfileFallback(
+      'card-arena-deepseek-v4-flash-high',
+      'High',
+      3,
+      'Max',
+      5,
+    )],
+  }),
+  orcPreset({ key: 'data-md.deepseek-v4-flash.max', productLineId: 'deepseek_v4_flash', modelName: 'DeepSeek-v4-Flash Preview', profile: DATA_MD_DEFAULT_REASONING, providerName: 'DeepSeek', upstreamApi: 'DeepSeek API', sourceCardIds: ['card-aa-deepseek-v4-flash-0420', 'card-openrouter-deepseek-deepseek-v4-flash'] }),
+  orcPreset({ key: 'data-md.deepseek-v4-pro.max', productLineId: 'deepseek_v4_pro', modelName: 'DeepSeek-v4-Pro Preview', profile: DATA_MD_DEFAULT_REASONING, providerName: 'DeepSeek', upstreamApi: 'DeepSeek API', sourceCardIds: ['card-aa-deepseek-v4-pro', 'card-openrouter-deepseek-deepseek-v4-pro'] }),
   orcPreset({ key: 'data-md.glm-5-2.max', productLineId: 'glm_52', modelName: 'GLM-5.2', profile: DATA_MD_DEFAULT_REASONING, providerName: 'Z.ai', upstreamApi: 'Z.ai API', sourceCardIds: ['card-aa-glm-5-2', 'card-arena-glm-5-2-max', 'card-openrouter-z-ai-glm-5-2'] }),
   orcPreset({ key: 'data-md.hy3.max', productLineId: 'hunyuan_hy3', modelName: 'Hy3', profile: DATA_MD_DEFAULT_REASONING, providerName: 'GMICloud', upstreamApi: 'GMICloud API' }),
   definePreset({
@@ -1027,12 +1047,12 @@ const API_PROFILE_EXPANSION_PRESETS: readonly BuiltInConfigurationPreset[] = [
     sharedExactCardIds: ['card-openrouter-openai-gpt-5-5'],
   }),
   ...apiProfilePresets({
-    keyPrefix: 'data-md.deepseek-v4-flash', productLineId: 'deepseek_v4_flash', modelName: 'DeepSeek-v4-Flash',
+    keyPrefix: 'data-md.deepseek-v4-flash', productLineId: 'deepseek_v4_flash', modelName: 'DeepSeek-v4-Flash Preview',
     profileKeys: ['none', 'high', 'xhigh'], providerName: 'DeepSeek', upstreamApi: 'DeepSeek API',
     sharedExactCardIds: ['card-openrouter-deepseek-deepseek-v4-flash'],
   }),
   ...apiProfilePresets({
-    keyPrefix: 'data-md.deepseek-v4-pro', productLineId: 'deepseek_v4_pro', modelName: 'DeepSeek-v4-Pro',
+    keyPrefix: 'data-md.deepseek-v4-pro', productLineId: 'deepseek_v4_pro', modelName: 'DeepSeek-v4-Pro Preview',
     profileKeys: ['none', 'high', 'xhigh'], providerName: 'DeepSeek', upstreamApi: 'DeepSeek API',
     sharedExactCardIds: ['card-openrouter-deepseek-deepseek-v4-pro'],
   }),
@@ -1301,15 +1321,15 @@ const HARNESS_CONFIGURATION_PRESETS: readonly BuiltInConfigurationPreset[] = [
   harnessPreset({
     key: 'agent.arena.deepseek-v4-flash.max',
     productLineId: 'deepseek_v4_flash',
-    modelName: 'DeepSeek-v4-Flash',
+    modelName: 'DeepSeek-v4-Flash Preview',
     profile: 'Max',
     harness: 'Arena Agent Mode',
     providerName: 'DeepSeek',
     upstreamApi: 'DeepSeek API',
     exactHarnessCardIds: [],
     chatFallbackCardIds: [
-      'card-aa-deepseek-v4-flash',
-      'card-arena-deepseek-v4-flash-thinking',
+      'card-aa-deepseek-v4-flash-0420',
+      'card-arena-deepseek-v4-flash-high-preview',
       'card-openrouter-deepseek-deepseek-v4-flash',
     ],
     sameHarnessFallbackLinks: [
@@ -1328,7 +1348,7 @@ const HARNESS_CONFIGURATION_PRESETS: readonly BuiltInConfigurationPreset[] = [
   arenaAgentModePreset({
     key: 'agent.arena.deepseek-v4-flash.none',
     productLineId: 'deepseek_v4_flash',
-    modelName: 'DeepSeek-v4-Flash',
+    modelName: 'DeepSeek-v4-Flash Preview',
     profile: 'None',
     providerName: 'DeepSeek',
     upstreamApi: 'DeepSeek API',
@@ -1882,7 +1902,7 @@ const HARNESS_CONFIGURATION_PRESETS: readonly BuiltInConfigurationPreset[] = [
   harnessPreset({
     key: 'harness.deepseek-v4-pro.high.claude-code',
     productLineId: 'deepseek_v4_pro',
-    modelName: 'DeepSeek-v4-Pro',
+    modelName: 'DeepSeek-v4-Pro Preview',
     profile: 'High',
     harness: 'Claude Code',
     providerName: 'DeepSeek',
@@ -1890,7 +1910,7 @@ const HARNESS_CONFIGURATION_PRESETS: readonly BuiltInConfigurationPreset[] = [
     exactHarnessCardIds: ['card-aa-coding-agent-claude-code-deepseek-v4-pro-high'],
     chatFallbackCardIds: [
       'card-aa-deepseek-v4-pro-high',
-      'card-arena-deepseek-v4-pro-thinking',
+      'card-arena-deepseek-v4-pro-high-preview',
       'card-openrouter-deepseek-deepseek-v4-pro',
     ],
     sameHarnessFallbackLinks: [
@@ -3696,4 +3716,4 @@ export const BUILT_IN_CONFIGURATION_PRESET_COUNT = BUILT_IN_CONFIGURATION_PRESET
  * additions visible during Vite hot updates as well as after a full reload.
  */
 export const BUILT_IN_CONFIGURATION_PRESET_INVENTORY_VERSION =
-  '2026-07-29-first-party-subscription-routes-v30';
+  '2026-08-04-deepseek-v4-flash-0731-normal-source-v33';

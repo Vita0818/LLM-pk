@@ -6,6 +6,10 @@ export interface RadarSeries {
   id: string;
   name: string;
   color: string;
+  /** Custom fill color for the data polygon (e.g. 'transparent', '#3B82F6'). Defaults to `color`. */
+  fillColor?: string;
+  /** Custom fill opacity for the data polygon. Defaults to 0.18 (or 0.14 when domains are missing). */
+  fillOpacity?: number | string;
   /** Null means the domain has zero real observations and is not plotted. */
   scores: Record<DomainId, number | null>;
 }
@@ -17,6 +21,7 @@ interface RadarChartProps {
   hoveredDomain?: DomainId | null;
   onHoverDomain?: (domain: DomainId | null) => void;
   showDomainNames?: boolean;
+  animateSeries?: boolean;
 }
 
 const DOMAIN_ORDER: DomainId[] = [
@@ -35,6 +40,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   hoveredDomain: controlledHoveredDomain,
   onHoverDomain,
   showDomainNames = true,
+  animateSeries = false,
 }) => {
   const [internalHoveredDomain, setInternalHoveredDomain] = useState<DomainId | null>(null);
   const hoveredDomain = controlledHoveredDomain !== undefined ? controlledHoveredDomain : internalHoveredDomain;
@@ -138,14 +144,21 @@ export const RadarChart: React.FC<RadarChartProps> = ({
             const fullPolygonPoints = points.map(({ x, y }) => `${x},${y}`).join(' ');
             const availablePolygonPoints = availablePoints.map(({ x, y }) => `${x},${y}`).join(' ');
 
+            const polygonFill = series.fillColor ?? series.color;
+            const polygonOpacity = series.fillOpacity ?? '0.18';
+            const missingPolygonOpacity = series.fillOpacity ?? '0.14';
+
             return (
-              <g key={`series-group-${series.id}`}>
+              <g
+                key={`series-group-${series.id}`}
+                className={animateSeries ? 'radar-series-enter' : undefined}
+              >
                 {hasMissingDomain ? (
                   availablePoints.length >= 3 ? (
                     <polygon
                       points={availablePolygonPoints}
-                      fill={series.color}
-                      fillOpacity="0.14"
+                      fill={polygonFill}
+                      fillOpacity={missingPolygonOpacity}
                       stroke={series.color}
                       strokeWidth="3"
                       strokeDasharray="6 4"
@@ -166,8 +179,8 @@ export const RadarChart: React.FC<RadarChartProps> = ({
                 ) : (
                   <polygon
                     points={fullPolygonPoints}
-                    fill={series.color}
-                    fillOpacity="0.18"
+                    fill={polygonFill}
+                    fillOpacity={polygonOpacity}
                     stroke={series.color}
                     strokeWidth="3"
                     className="transition-all duration-200"

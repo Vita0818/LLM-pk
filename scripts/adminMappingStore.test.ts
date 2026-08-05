@@ -81,15 +81,17 @@ interface StackPair {
   upperValue: number;
 }
 
+const baseCards = JSON.parse(VERIFIED_SOURCE_MODEL_CARDS) as SourceModelCard[];
+const baseObservations = JSON.parse(VERIFIED_SOURCE_OBSERVATIONS) as SourceObservation[];
 const cards = [
-  ...(JSON.parse(VERIFIED_SOURCE_MODEL_CARDS) as SourceModelCard[]),
+  ...baseCards,
   ...VERIFIED_HARNESS_SOURCE_MODEL_CARDS,
   ...VERIFIED_PRODUCTION_AGENT_MODE_SOURCE_MODEL_CARDS,
   ...VERIFIED_REVIEWED_FAMILY_SOURCE_MODEL_CARDS,
   ...VERIFIED_RECOVERED_SOURCE_MODEL_CARDS,
 ];
 const observations = [
-  ...(JSON.parse(VERIFIED_SOURCE_OBSERVATIONS) as SourceObservation[]),
+  ...baseObservations,
   ...VERIFIED_HARNESS_SOURCE_OBSERVATIONS,
   ...VERIFIED_PRODUCTION_AGENT_MODE_SOURCE_OBSERVATIONS,
   ...VERIFIED_REVIEWED_FAMILY_SOURCE_OBSERVATIONS,
@@ -154,7 +156,7 @@ const numericObservations = (card: SourceModelCard): Map<string, number> => {
  * precedence.
  */
 const findStackPair = (): StackPair => {
-  const capabilityCards = cards.filter((card) => (
+  const capabilityCards = baseCards.filter((card) => (
     card.source === 'artificial_analysis' || card.source === 'arena'
   ));
 
@@ -173,7 +175,7 @@ const findStackPair = (): StackPair => {
       });
       if (!sharedMetric) continue;
 
-      const supportingCard = cards.find((candidate) => (
+      const supportingCard = baseCards.find((candidate) => (
         candidate.source !== lower.source && scopeKey(candidate) === scopeKey(lower)
       ));
       if (!supportingCard) continue;
@@ -822,6 +824,7 @@ for (const [vendorKey, modelGroups] of nonKeyVendorModelGroups) {
   );
 }
 for (const presetId of [
+  'builtin.data-md.deepseek-v4-flash-0731.max',
   'builtin.harness.gpt-5-6-sol.max.codex-cli',
   'builtin.harness.gpt-5-6-luna.max.codex-cli',
   'builtin.harness.gpt-5-6-terra.max.codex-cli',
@@ -1231,6 +1234,38 @@ for (const box of installedPresetBoxes) {
     `Preset ${preset.id} must consume harness metrics only through an exact or authored upward execution link.`,
   );
 }
+const deepSeek0731Box = installedPresetBoxes.find((box) => (
+  box.builtInPresetId === 'builtin.data-md.deepseek-v4-flash-0731.max'
+));
+assert.ok(deepSeek0731Box, 'DeepSeek V4 Flash 0731 Max must be installed as its own configuration.');
+assert.deepEqual(
+  reconciledV3Store.getLinkedCardStack(deepSeek0731Box.id).map(({ card }) => card.id),
+  [
+    'card-aa-deepseek-v4-flash',
+    'card-arena-deepseek-v4-flash-high',
+  ],
+  'The 0731 configuration must use only independently versioned 0731 cards.',
+);
+const deepSeek0731Config = reconciledV3Store.buildLLMConfiguration(deepSeek0731Box);
+assert.deepEqual(
+  Object.keys(deepSeek0731Config.observations).filter((metricId) => metricId.startsWith('arena_')),
+  ['arena_code_webdev'],
+  'Only the independently versioned 0731 Arena WebDev row may be connected.',
+);
+assert.equal(
+  deepSeek0731Config.observations.arena_code_webdev?.rawValue,
+  1576.5384851960803,
+);
+assert.deepEqual(deepSeek0731Config.openRouterData, {
+  inputPricePerMToken: 0.14,
+  outputPricePerMToken: 0.28,
+  ttftP50Seconds: 1.31791696599998,
+  throughputP50TokensPerSec: 122.691560555279,
+});
+const deepSeek0731Score = scoreByConfigurationId.get(deepSeek0731Box.id);
+assert.equal(deepSeek0731Score?.availableDomainCount, 5);
+assert.equal(deepSeek0731Score?.eligibleForGlobalLeaderboard, true);
+assert.notEqual(deepSeek0731Score?.practicalBreakdown.practicalScore, null);
 for (const presetId of [
   'builtin.harness.claude-fable-5.max.claude-code',
   'builtin.harness.claude-opus-4-6.max.claude-code',

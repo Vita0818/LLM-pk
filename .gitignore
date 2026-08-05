@@ -8,6 +8,7 @@ dist/
 # Local caches and working data
 .cache/
 scratch/
+.workbuddy/
 
 # Local environment files
 .env

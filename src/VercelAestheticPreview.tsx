@@ -1,13 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   Search,
   ArrowUpRight,
   ArrowUpDown,
   ArrowLeft,
+  Play,
 } from 'lucide-react';
-import { DOMAIN_DEFINITIONS, ALL_METRIC_DEFINITIONS } from './engine/scoringEngine';
-import { DETAIL_ONLY_METRIC_DEFINITIONS } from './data/detailMetricDefinitions';
-import { getCompactMetricName } from './data/compactMetricNames';
+import { DOMAIN_DEFINITIONS } from './engine/scoringEngine';
 import publicLeaderboardSnapshot from './data/publicLeaderboardSnapshot.json';
 import { DomainId } from './types/llm_pk';
 import type {
@@ -15,32 +19,36 @@ import type {
   PublicLeaderboardSnapshot,
 } from './types/publicLeaderboard';
 import { RadarChart } from './components/RadarChart';
+import { SideBySideCompareView } from './components/SideBySideCompareView';
+import {
+  ConfigurationMetricList,
+  ConfigurationRadar,
+  parseConfigurationName,
+} from './components/ConfigurationDetailContent';
+import { getProviderBrandTheme } from './utils/providerColors';
 import {
   formatPracticalAdjustment,
   getPracticalAdjustment,
   practicalAdjustmentTextClass,
 } from './utils/practicalAdjustment';
+import { PlayModeHud } from './components/PlayModeHud';
+import { AnimatedScore } from './components/AnimatedScore';
+import { buildPlayModeQueue } from './utils/playModeQueue';
+import {
+  PlayModeCreditsCard,
+  PlayModeIntroCard,
+  PlayModeWeightsCard,
+} from './components/PlayModeTitleCards';
+import { PLAY_MODE_ENABLED } from './config/featureFlags';
 
 type SortKey = 'rawCapabilityScore' | 'practicalScore' | DomainId;
+
+/** intro -> model loop -> outro weights -> outro credits -> finished. */
+type PlayModePhase = 'intro' | 'model' | 'outro_weights' | 'outro_credits';
 
 const PUBLIC_SCORES = (
   publicLeaderboardSnapshot as unknown as PublicLeaderboardSnapshot
 ).scores;
-
-const formatRawMetricValue = (val: number | null | undefined, unit?: string) => {
-  if (val === null || val === undefined || isNaN(val)) return '--';
-  if (unit === '%' || unit === 'pass@1') {
-    const pct = val <= 1 && val > 0 ? val * 100 : val;
-    return `${pct.toFixed(1)}%`;
-  }
-  if (unit === 'Score' || unit === 'Score Point' || unit === 'Elo') {
-    return Math.round(val).toLocaleString();
-  }
-  if (Number.isInteger(val)) {
-    return val.toString();
-  }
-  return val.toFixed(1);
-};
 
 const getScoreDepthStyle = (score: number | null | undefined) => {
   if (score === null || score === undefined || isNaN(score)) {
@@ -53,20 +61,6 @@ const getScoreDepthStyle = (score: number | null | undefined) => {
   return { opacity, fontWeight };
 };
 
-const getDomainDef = (dId: string) => {
-  if (dId === 'reliability') {
-    return {
-      id: 'reliability' as DomainId,
-      name: 'Reliability 可靠性与抗幻觉',
-      nameEn: 'Reliability & Anti-Hallucination',
-      weight: 1 / 6,
-      color: '#EC4899',
-      description: '衡量终端恢复、工具幻觉防护与回复稳定性。',
-    };
-  }
-  return DOMAIN_DEFINITIONS[dId as DomainId] || DOMAIN_DEFINITIONS.chatting;
-};
-
 /**
  * 100% Authentic Artificial Analysis (artificialanalysis.ai) Replica Design System
  * - Heading Font: Instrument Serif (font-brand-serif)
@@ -75,15 +69,30 @@ const getDomainDef = (dId: string) => {
  * - Header Pill Navbar: bg-neutral-100 rounded-[1.5rem] with bg-black active pill
  */
 export const VercelAestheticPreview: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'leaderboard' | 'overview' | 'detail'>('leaderboard');
-  const [lastMainTab, setLastMainTab] = useState<'leaderboard' | 'overview'>('leaderboard');
+  const [activeTab, setActiveTab] = useState<'leaderboard' | 'side_by_side' | 'overview' | 'detail'>('leaderboard');
+  const [lastMainTab, setLastMainTab] = useState<'leaderboard' | 'side_by_side' | 'overview'>('leaderboard');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedConfigId, setSelectedConfigId] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'reasoning' | 'top'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('practicalScore');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [hoveredDomain, setHoveredDomain] = useState<DomainId | null>(null);
+  const [comparisonSelectedIds, setComparisonSelectedIds] = useState<string[]>(() =>
+    PUBLIC_SCORES.filter((item) => item.eligibleForGlobalLeaderboard !== false)
+      .slice(0, 3)
+      .map((item) => item.config.id)
+  );
   const scores: PublicLeaderboardScore[] = PUBLIC_SCORES;
+
+  // Play Mode: rank the 37 representative radar profiles from low to high.
+  const [isPlayModeActive, setIsPlayModeActive] = useState(false);
+  const [isPlayModePlaying, setIsPlayModePlaying] = useState(false);
+  const [playModePhase, setPlayModePhase] = useState<PlayModePhase>('intro');
+  const [playModeIndex, setPlayModeIndex] = useState(0); // 0 = last place, total - 1 = #1 rank
+  const [playModeElapsedMs, setPlayModeElapsedMs] = useState(0);
+  const [isPlayModeFinished, setIsPlayModeFinished] = useState(false);
+  const [playModeStaySeconds, setPlayModeStaySeconds] = useState(5);
+  const [isPlayModeCleanView, setIsPlayModeCleanView] = useState(false);
 
   // Filtered scores
   const filteredScores = useMemo(() => {
@@ -152,8 +161,291 @@ export const VercelAestheticPreview: React.FC = () => {
       });
   }, [scores, searchTerm, filterCategory, sortKey, sortOrder]);
 
+  // Playback deliberately ignores search/filter UI state. Equivalent API and
+  // subscription routes share one radar slot, represented by the route with
+  // the highest practical score.
+  const playModeQueue = useMemo(
+    () => PLAY_MODE_ENABLED ? buildPlayModeQueue(scores) : [],
+    [scores],
+  );
+
+  const showPlayModeIndex = useCallback((index: number) => {
+    const queueLength = playModeQueue.length;
+    const target = playModeQueue[queueLength - 1 - index];
+    if (!target) return;
+
+    setSelectedConfigId(target.config.id);
+    setActiveTab('detail');
+    setHoveredDomain(null);
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [playModeQueue]);
+
+  const resetPlayMode = useCallback((shouldPlay: boolean) => {
+    if (!PLAY_MODE_ENABLED || playModeQueue.length === 0) return;
+
+    setPlayModePhase('intro');
+    setPlayModeIndex(0);
+    setPlayModeElapsedMs(0);
+    setIsPlayModeFinished(false);
+    setIsPlayModeActive(true);
+    setIsPlayModePlaying(shouldPlay);
+    showPlayModeIndex(0);
+  }, [playModeQueue.length, showPlayModeIndex]);
+
+  // Use real elapsed time so a busy recording frame does not make the timer
+  // drift. React only updates the progress UI at 20fps.
+  useEffect(() => {
+    if (!PLAY_MODE_ENABLED || !isPlayModeActive || !isPlayModePlaying || isPlayModeFinished) return;
+
+    let previousTick = performance.now();
+    const timer = window.setInterval(() => {
+      const now = performance.now();
+      const elapsedSinceTick = Math.max(0, now - previousTick);
+      previousTick = now;
+      setPlayModeElapsedMs((prev) => {
+        const stayMs = playModeStaySeconds * 1000;
+        return Math.min(stayMs, prev + elapsedSinceTick);
+      });
+    }, 50);
+
+    return () => window.clearInterval(timer);
+  }, [
+    isPlayModeActive,
+    isPlayModePlaying,
+    isPlayModeFinished,
+    playModeStaySeconds,
+    playModeIndex,
+  ]);
+
+  useEffect(() => {
+    if (
+      !PLAY_MODE_ENABLED
+      || !isPlayModeActive
+      || !isPlayModePlaying
+      || isPlayModeFinished
+      || playModeElapsedMs < playModeStaySeconds * 1000
+    ) {
+      return;
+    }
+
+    if (playModePhase === 'intro') {
+      setPlayModePhase('model');
+      setPlayModeElapsedMs(0);
+      showPlayModeIndex(0);
+      return;
+    }
+
+    if (playModePhase === 'model') {
+      const nextIndex = playModeIndex + 1;
+      if (nextIndex >= playModeQueue.length) {
+        setPlayModePhase('outro_weights');
+        setPlayModeElapsedMs(0);
+        return;
+      }
+
+      setPlayModeIndex(nextIndex);
+      setPlayModeElapsedMs(0);
+      showPlayModeIndex(nextIndex);
+      return;
+    }
+
+    if (playModePhase === 'outro_weights') {
+      setPlayModePhase('outro_credits');
+      setPlayModeElapsedMs(0);
+      return;
+    }
+
+    setIsPlayModeFinished(true);
+    setIsPlayModePlaying(false);
+  }, [
+    isPlayModeActive,
+    isPlayModePlaying,
+    isPlayModeFinished,
+    playModeElapsedMs,
+    playModeStaySeconds,
+    playModePhase,
+    playModeIndex,
+    playModeQueue.length,
+    showPlayModeIndex,
+  ]);
+
+  const handleStartPlayMode = useCallback(() => {
+    if (!PLAY_MODE_ENABLED) return;
+    setIsPlayModeCleanView(false);
+    resetPlayMode(true);
+  }, [resetPlayMode]);
+
+  const handlePlayModeTogglePlay = useCallback(() => {
+    if (isPlayModeFinished) {
+      resetPlayMode(true);
+      return;
+    }
+    setIsPlayModePlaying((prev) => !prev);
+  }, [isPlayModeFinished, resetPlayMode]);
+
+  const handlePlayModeNext = useCallback(() => {
+    const queueLength = playModeQueue.length;
+    setPlayModeElapsedMs(0);
+    setIsPlayModeFinished(false);
+
+    if (playModePhase === 'intro') {
+      setPlayModePhase('model');
+      setPlayModeIndex(0);
+      showPlayModeIndex(0);
+      return;
+    }
+    if (playModePhase === 'model') {
+      if (playModeIndex < queueLength - 1) {
+        const nextIdx = playModeIndex + 1;
+        setPlayModeIndex(nextIdx);
+        showPlayModeIndex(nextIdx);
+      } else {
+        setPlayModePhase('outro_weights');
+      }
+      return;
+    }
+    if (playModePhase === 'outro_weights') {
+      setPlayModePhase('outro_credits');
+    }
+  }, [playModePhase, playModeIndex, playModeQueue.length, showPlayModeIndex]);
+
+  const handlePlayModePrev = useCallback(() => {
+    setPlayModeElapsedMs(0);
+    setIsPlayModeFinished(false);
+
+    if (playModePhase === 'outro_credits') {
+      setPlayModePhase('outro_weights');
+      return;
+    }
+    if (playModePhase === 'outro_weights') {
+      const lastIdx = playModeQueue.length - 1;
+      setPlayModePhase('model');
+      setPlayModeIndex(lastIdx);
+      showPlayModeIndex(lastIdx);
+      return;
+    }
+    if (playModePhase === 'model') {
+      if (playModeIndex > 0) {
+        const prevIdx = playModeIndex - 1;
+        setPlayModeIndex(prevIdx);
+        showPlayModeIndex(prevIdx);
+      } else {
+        setPlayModePhase('intro');
+      }
+    }
+  }, [playModePhase, playModeIndex, playModeQueue.length, showPlayModeIndex]);
+
+  const handlePlayModeReplay = useCallback(() => {
+    resetPlayMode(true);
+  }, [resetPlayMode]);
+
+  const leaveFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    }
+  }, []);
+
+  const handlePlayModeExit = useCallback(() => {
+    setIsPlayModeActive(false);
+    setIsPlayModePlaying(false);
+    setIsPlayModeFinished(false);
+    setPlayModeElapsedMs(0);
+    setIsPlayModeCleanView(false);
+    leaveFullscreen();
+    setActiveTab(lastMainTab);
+  }, [lastMainTab, leaveFullscreen]);
+
+  const handlePrepareRecording = useCallback(() => {
+    resetPlayMode(false);
+    setIsPlayModeCleanView(true);
+
+    if (!document.fullscreenElement) {
+      void document.documentElement.requestFullscreen().catch(() => undefined);
+    }
+  }, [resetPlayMode]);
+
+  const handleLeaveCleanView = useCallback(() => {
+    setIsPlayModeCleanView(false);
+    leaveFullscreen();
+  }, [leaveFullscreen]);
+
+  const handleStayDurationChange = useCallback((seconds: number) => {
+    setPlayModeStaySeconds(seconds);
+    setPlayModeElapsedMs(0);
+  }, []);
+
+  useEffect(() => {
+    if (!PLAY_MODE_ENABLED || !isPlayModeActive) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isFormControl = target?.tagName === 'INPUT'
+        || target?.tagName === 'SELECT'
+        || target?.tagName === 'TEXTAREA';
+      if (isFormControl && event.key !== 'Escape') return;
+
+      if (event.code === 'Space') {
+        event.preventDefault();
+        handlePlayModeTogglePlay();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        handlePlayModeNext();
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handlePlayModePrev();
+      } else if (event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        handlePlayModeReplay();
+      } else if (event.key.toLowerCase() === 'h') {
+        event.preventDefault();
+        if (isPlayModeCleanView) {
+          handleLeaveCleanView();
+        } else {
+          handlePrepareRecording();
+        }
+      } else if (event.key === 'Escape' && isPlayModeCleanView) {
+        handleLeaveCleanView();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    isPlayModeActive,
+    isPlayModeCleanView,
+    handleLeaveCleanView,
+    handlePlayModeNext,
+    handlePlayModePrev,
+    handlePlayModeReplay,
+    handlePlayModeTogglePlay,
+    handlePrepareRecording,
+  ]);
+
+  useEffect(() => {
+    if (!PLAY_MODE_ENABLED || !isPlayModeCleanView) return;
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsPlayModeCleanView(false);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [isPlayModeCleanView]);
+
   const selectedScoreItem =
     scores.find((s) => s.config.id === selectedConfigId) || scores[0];
+  const currentPlayModeItem = PLAY_MODE_ENABLED && isPlayModeActive
+    ? playModeQueue[playModeQueue.length - 1 - playModeIndex]
+    : null;
+  const currentPlayModeRank = currentPlayModeItem
+    ? playModeQueue.length - playModeIndex
+    : null;
+  const selectedParsedName = parseConfigurationName(selectedScoreItem.config.name);
+  const selectedPracticalAdjustment = getPracticalAdjustment(
+    selectedScoreItem.practicalBreakdown,
+  );
 
   const domainList: DomainId[] = [
     'chatting',
@@ -165,20 +457,7 @@ export const VercelAestheticPreview: React.FC = () => {
   ];
 
   const formatScore = (s: number | null) => (s === null ? '--' : s.toFixed(1));
-  const formatCostValue = (value: number) => value.toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-
-  // Split 3-part configuration name
-  const parseConfigName = (name: string) => {
-    const parts = name.split(' | ');
-    return {
-      model: parts[0] || name,
-      harness: parts[1] || 'Chat',
-      provider: parts[2] || 'API',
-    };
-  };
+  const parseConfigName = parseConfigurationName;
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -214,10 +493,69 @@ export const VercelAestheticPreview: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900 font-brand-mono antialiased selection:bg-black selection:text-white">
+    <div
+      className={`min-h-screen bg-white text-neutral-900 font-brand-mono antialiased selection:bg-black selection:text-white ${
+        PLAY_MODE_ENABLED && isPlayModeCleanView ? 'play-mode-clean-view' : ''
+      }`}
+    >
+      {/* Floating Play Mode Controller HUD */}
+      {PLAY_MODE_ENABLED && isPlayModeActive && !isPlayModeCleanView && (() => {
+        const queueLength = playModeQueue.length;
+        const isModelPhase = playModePhase === 'model';
+        const currentItem = isModelPhase ? currentPlayModeItem : null;
+        const parsed = currentItem ? parseConfigName(currentItem.config.name) : null;
+        // Virtual timeline: intro + models + weights card + credits card.
+        const virtualIndex =
+          playModePhase === 'intro'
+            ? 0
+            : playModePhase === 'model'
+              ? playModeIndex + 1
+              : playModePhase === 'outro_weights'
+                ? queueLength + 1
+                : queueLength + 2;
+        const stageLabel =
+          playModePhase === 'intro' ? '片头'
+            : playModePhase === 'model' ? undefined
+              : '片尾';
+        const stageTitle =
+          playModePhase === 'intro' ? 'LLMpk'
+            : playModePhase === 'outro_weights' ? '评分权重'
+              : playModePhase === 'outro_credits' ? 'Thanks for Watching'
+                : '';
+
+        return (
+          <PlayModeHud
+            totalItems={queueLength}
+            totalSteps={queueLength + 3}
+            currentIndex={virtualIndex}
+            currentRank={isModelPhase ? currentPlayModeRank : null}
+            stageLabel={stageLabel}
+            currentModelName={isModelPhase
+              ? (parsed ? parsed.model : currentItem?.config.name || '')
+              : stageTitle}
+            currentHarness={isModelPhase ? parsed?.harness : undefined}
+            currentProvider={isModelPhase ? parsed?.provider : undefined}
+            currentScore={isModelPhase ? currentItem?.practicalBreakdown.practicalScore ?? null : null}
+            scoreLabel="实用分"
+            isPlaying={isPlayModePlaying}
+            isFinished={isPlayModeFinished}
+            stayDurationSeconds={playModeStaySeconds}
+            elapsedMs={playModeElapsedMs}
+            onTogglePlay={handlePlayModeTogglePlay}
+            onNext={handlePlayModeNext}
+            onPrev={handlePlayModePrev}
+            onReplay={handlePlayModeReplay}
+            onExit={handlePlayModeExit}
+            onStayDurationChange={handleStayDurationChange}
+            onPrepareRecording={handlePrepareRecording}
+          />
+        );
+      })()}
+
       {/* 1. Header Navigation */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 shadow-2xs">
-        <div className="max-w-[1500px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      {(!PLAY_MODE_ENABLED || !isPlayModeCleanView) && (
+        <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 shadow-2xs">
+          <div className="max-w-[1500px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
           {/* Logo & Circular Back Button Next to LLMpk */}
           <div className="flex items-center gap-3">
             <a href={import.meta.env.BASE_URL} className="font-brand-mono text-3xl font-black text-neutral-950 tracking-tight select-none hover:opacity-90 transition-opacity">
@@ -237,42 +575,78 @@ export const VercelAestheticPreview: React.FC = () => {
             )}
           </div>
 
-          {/* Top Right Main Tab Switcher (Leaderboard vs Radar Overview) */}
-          {activeTab !== 'detail' && (
-            <div className="flex items-center p-1 bg-neutral-100/90 rounded-full border border-neutral-200/80 text-xs font-bold font-brand-mono">
+          {/* Top Right Main Tab Switcher & Play Mode Button */}
+          <div className="flex items-center gap-2">
+            {activeTab !== 'detail' && (
+              <div className="flex items-center p-1 bg-neutral-100/90 rounded-full border border-neutral-200/80 text-xs font-bold font-brand-mono">
+                <button
+                  onClick={() => {
+                    setActiveTab('leaderboard');
+                    setLastMainTab('leaderboard');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full transition-all ${
+                    activeTab === 'leaderboard'
+                      ? 'bg-black text-white shadow-2xs'
+                      : 'text-neutral-600 hover:text-neutral-950'
+                  }`}
+                >
+                  全量榜单
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('side_by_side');
+                    setLastMainTab('side_by_side');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full transition-all ${
+                    activeTab === 'side_by_side'
+                      ? 'bg-black text-white shadow-2xs'
+                      : 'text-neutral-600 hover:text-neutral-950'
+                  }`}
+                >
+                  并排对比
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('overview');
+                    setLastMainTab('overview');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-full transition-all ${
+                    activeTab === 'overview'
+                      ? 'bg-black text-white shadow-2xs'
+                      : 'text-neutral-600 hover:text-neutral-950'
+                  }`}
+                >
+                  雷达图总览
+                </button>
+              </div>
+            )}
+
+            {/* Play Mode Launch Button */}
+            {PLAY_MODE_ENABLED && (
               <button
-                onClick={() => {
-                  setActiveTab('leaderboard');
-                  setLastMainTab('leaderboard');
-                }}
-                className={`px-3.5 py-1.5 rounded-full transition-all ${
-                  activeTab === 'leaderboard'
-                    ? 'bg-black text-white shadow-2xs'
-                    : 'text-neutral-600 hover:text-neutral-950'
-                }`}
+                onClick={handleStartPlayMode}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-950 hover:bg-neutral-800 text-white font-bold text-xs shadow-2xs transition-all border border-neutral-800 shrink-0 cursor-pointer"
+                title={`开启播放模式（${playModeQueue.length} 个代表配置，从末位播放至第 1 名）`}
               >
-                全量榜单
+                <Play className="w-3.5 h-3.5 fill-current text-emerald-400" />
+                <span>播放模式</span>
               </button>
-              <button
-                onClick={() => {
-                  setActiveTab('overview');
-                  setLastMainTab('overview');
-                }}
-                className={`px-3.5 py-1.5 rounded-full transition-all ${
-                  activeTab === 'overview'
-                    ? 'bg-black text-white shadow-2xs'
-                    : 'text-neutral-600 hover:text-neutral-950'
-                }`}
-              >
-                雷达图总览
-              </button>
+            )}
             </div>
-          )}
-        </div>
-      </header>
+          </div>
+        </header>
+      )}
 
       {/* 2. Main Section */}
-      <main className="max-w-[1500px] mx-auto px-4 py-6">
+      <main
+        className={
+          PLAY_MODE_ENABLED && isPlayModeCleanView
+            ? 'play-mode-clean-stage mx-auto h-screen w-full max-w-[1500px] px-6 py-4'
+            : PLAY_MODE_ENABLED && isPlayModeActive
+              ? 'mx-auto w-full max-w-[1500px] px-4 pb-6 pt-36'
+              : 'mx-auto w-full max-w-[1500px] px-4 py-6'
+        }
+      >
         {/* VIEW 1: MODELS LEADERBOARD */}
         {activeTab === 'leaderboard' && (
           <div className="space-y-6">
@@ -469,26 +843,32 @@ export const VercelAestheticPreview: React.FC = () => {
 
                     {/* Compact Radar Chart (Centered inside card) */}
                     <div className="py-2 flex items-center justify-center">
-                      <RadarChart
-                        seriesList={[
-                          {
-                            id: item.config.id,
-                            name: item.config.name,
-                            color: '#6B21A8',
-                            scores: {
-                              chatting: item.domainScores?.chatting?.score ?? null,
-                              math_science: item.domainScores?.math_science?.score ?? null,
-                              coding: item.domainScores?.coding?.score ?? null,
-                              engineering: item.domainScores?.engineering?.score ?? null,
-                              agentic_work: item.domainScores?.agentic_work?.score ?? null,
-                              search_knowledge: item.domainScores?.search_knowledge?.score ?? null,
-                            },
-                          },
-                        ]}
-                        size={270}
-                        showLegend={false}
-                        showDomainNames={false}
-                      />
+                      {(() => {
+                        const brandTheme = getProviderBrandTheme(parsed.provider);
+                        return (
+                          <RadarChart
+                            seriesList={[
+                              {
+                                id: item.config.id,
+                                name: item.config.name,
+                                color: brandTheme.color,
+                                fillColor: brandTheme.fillColor,
+                                scores: {
+                                  chatting: item.domainScores?.chatting?.score ?? null,
+                                  math_science: item.domainScores?.math_science?.score ?? null,
+                                  coding: item.domainScores?.coding?.score ?? null,
+                                  engineering: item.domainScores?.engineering?.score ?? null,
+                                  agentic_work: item.domainScores?.agentic_work?.score ?? null,
+                                  search_knowledge: item.domainScores?.search_knowledge?.score ?? null,
+                                },
+                              },
+                            ]}
+                            size={270}
+                            showLegend={false}
+                            showDomainNames={false}
+                          />
+                        );
+                      })()}
                     </div>
                   </div>
                 );
@@ -497,221 +877,158 @@ export const VercelAestheticPreview: React.FC = () => {
           </div>
         )}
 
+        {/* VIEW 2: SIDE-BY-SIDE COMPARE */}
+        {activeTab === 'side_by_side' && (
+          <SideBySideCompareView
+            scoreItems={scores}
+            selectedIds={comparisonSelectedIds}
+            onSelectedIdsChange={setComparisonSelectedIds}
+            onSelectConfigForDetail={(item) => {
+              setSelectedConfigId(item.config.id);
+              setActiveTab('detail');
+            }}
+          />
+        )}
+
+        {/* PLAY MODE TITLE CARDS: intro + outro phases replace the detail stage */}
+        {PLAY_MODE_ENABLED && isPlayModeActive && playModePhase === 'intro' && (
+          <PlayModeIntroCard />
+        )}
+        {PLAY_MODE_ENABLED && isPlayModeActive && playModePhase === 'outro_weights' && (
+          <PlayModeWeightsCard />
+        )}
+        {PLAY_MODE_ENABLED && isPlayModeActive && playModePhase === 'outro_credits' && (
+          <PlayModeCreditsCard />
+        )}
+
         {/* VIEW 3: RADAR & CONFIGURATION DETAIL */}
-        {activeTab === 'detail' && selectedScoreItem && (
-          <div className="space-y-4">
+        {activeTab === 'detail' && selectedScoreItem && (!PLAY_MODE_ENABLED || !isPlayModeActive || playModePhase === 'model') && (
+          <div
+            key={selectedScoreItem.config.id}
+            className={`space-y-4 ${
+              PLAY_MODE_ENABLED && isPlayModeActive ? 'play-mode-scene-enter' : ''
+            }`}
+          >
+            {PLAY_MODE_ENABLED && isPlayModeActive && currentPlayModeRank !== null && (
+              <div className="play-mode-rank-enter flex items-center justify-between font-brand-mono">
+                <div className="select-none text-4xl font-black tracking-tight text-neutral-950">
+                  LLMpk
+                </div>
+                <div className="-mb-6 flex translate-y-4 items-baseline gap-2">
+                  <span className="text-[4.5rem] font-black leading-none text-neutral-950">
+                    #{currentPlayModeRank}
+                  </span>
+                  <span className="text-lg font-bold text-neutral-400">
+                    / {playModeQueue.length}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Header Area directly on background WITHOUT grey bottom border */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-1 font-brand-mono">
-              <div className="space-y-0.5 sm:space-y-1">
+              <div className={`space-y-0.5 sm:space-y-1 ${
+                PLAY_MODE_ENABLED && isPlayModeActive ? 'play-mode-title-enter' : ''
+              }`}>
                 {/* Line 1: Model Name */}
-                <h2 className="text-2xl sm:text-3xl font-black text-neutral-950 tracking-tight leading-tight">
-                  {parseConfigName(selectedScoreItem.config.name).model}
+                <h2 className="text-3xl sm:text-4xl font-black text-neutral-950 tracking-tight leading-tight">
+                  {selectedParsedName.model}
                 </h2>
 
                 {/* Desktop: Harness | Provider on single line */}
-                <div className="hidden sm:flex items-center gap-1.5 font-bold text-neutral-950 text-2xl sm:text-3xl tracking-tight">
-                  <span>{parseConfigName(selectedScoreItem.config.name).harness}</span>
+                <div className="hidden sm:flex items-center gap-1.5 font-bold text-neutral-950 text-3xl sm:text-4xl tracking-tight">
+                  <span>{selectedParsedName.harness}</span>
                   <span className="text-neutral-300 font-normal">|</span>
-                  <span>{parseConfigName(selectedScoreItem.config.name).provider}</span>
+                  <span>{selectedParsedName.provider}</span>
                 </div>
 
                 {/* Mobile: 2 Separate Stacked Lines for Harness & Provider (Total 3 Lines) */}
                 <div className="sm:hidden space-y-0.5 font-brand-mono">
                   <div className="text-base font-bold text-neutral-800">
-                    {parseConfigName(selectedScoreItem.config.name).harness}
+                    {selectedParsedName.harness}
                   </div>
                   <div className="text-base font-semibold text-neutral-500">
-                    {parseConfigName(selectedScoreItem.config.name).provider}
+                    {selectedParsedName.provider}
                   </div>
                 </div>
               </div>
 
               {/* Scores directly on background - Enlarged Font Sizes */}
-              <div className="flex items-center gap-8 font-brand-mono shrink-0">
-                <div>
-                  <div className="text-neutral-500 text-xs uppercase font-bold tracking-wider">Intelligence Index</div>
-                  <div className="text-4xl sm:text-5xl font-black text-neutral-950 mt-0.5">
-                    {formatScore(selectedScoreItem.rawCapabilityScore)}
+              {PLAY_MODE_ENABLED && isPlayModeActive ? (
+                <div className="play-mode-scores-enter shrink-0 translate-y-3 font-brand-mono">
+                  <div className="flex items-baseline gap-2 whitespace-nowrap">
+                    <span className="text-5xl font-black text-neutral-950 sm:text-6xl">
+                      <AnimatedScore value={selectedScoreItem.rawCapabilityScore} />
+                    </span>
+                    <span className="text-2xl font-bold text-neutral-400 sm:text-3xl">
+                      (
+                      <span className={practicalAdjustmentTextClass(selectedPracticalAdjustment)}>
+                        <AnimatedScore
+                          value={selectedPracticalAdjustment}
+                          showPlus
+                        />
+                      </span>
+                      <span> → </span>
+                      <span className="font-black text-purple-950">
+                        <AnimatedScore
+                          value={selectedScoreItem.practicalBreakdown.practicalScore}
+                        />
+                      </span>
+                      )
+                    </span>
                   </div>
                 </div>
-                <div className="h-10 w-px bg-neutral-200" />
-                <div>
-                  <div className="text-neutral-500 text-xs uppercase font-bold tracking-wider">Practical Delta</div>
-                  <div className={`text-3xl sm:text-4xl font-black mt-0.5 ${
-                    practicalAdjustmentTextClass(
-                      getPracticalAdjustment(selectedScoreItem.practicalBreakdown)
-                    )
-                  }`}>
-                    {formatPracticalAdjustment(
-                      getPracticalAdjustment(selectedScoreItem.practicalBreakdown)
-                    )}
+              ) : (
+                <div className="flex shrink-0 flex-wrap items-center gap-5 font-brand-mono sm:gap-7">
+                  <div>
+                    <div className="text-neutral-500 text-xs uppercase font-bold tracking-wider">Practical Score</div>
+                    <div className="mt-0.5 text-4xl font-black text-purple-950 sm:text-5xl">
+                      {formatScore(selectedScoreItem.practicalBreakdown.practicalScore)}
+                    </div>
+                  </div>
+                  <div className="hidden h-10 w-px bg-neutral-200 sm:block" />
+                  <div>
+                    <div className="text-neutral-500 text-xs uppercase font-bold tracking-wider">Intelligence Index</div>
+                    <div className="mt-0.5 text-3xl font-black text-neutral-950 sm:text-4xl">
+                      {formatScore(selectedScoreItem.rawCapabilityScore)}
+                    </div>
+                  </div>
+                  <div className="hidden h-10 w-px bg-neutral-200 sm:block" />
+                  <div>
+                    <div className="text-neutral-500 text-xs uppercase font-bold tracking-wider">Practical Delta</div>
+                    <div className={`mt-0.5 text-3xl font-black sm:text-4xl ${
+                      practicalAdjustmentTextClass(selectedPracticalAdjustment)
+                    }`}>
+                      {formatPracticalAdjustment(selectedPracticalAdjustment)}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Radar Display & Domain Progress Bars directly on background */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-2">
               {/* Radar Chart comfortably centered */}
               <div className="lg:col-span-7 flex justify-center items-center -ml-4 py-0">
-                <RadarChart
-                  seriesList={[
-                    {
-                      id: selectedScoreItem.config.id,
-                      name: selectedScoreItem.config.name,
-                      color: '#6B21A8',
-                      scores: {
-                        chatting: selectedScoreItem.domainScores?.chatting?.score ?? null,
-                        math_science: selectedScoreItem.domainScores?.math_science?.score ?? null,
-                        coding: selectedScoreItem.domainScores?.coding?.score ?? null,
-                        engineering: selectedScoreItem.domainScores?.engineering?.score ?? null,
-                        agentic_work: selectedScoreItem.domainScores?.agentic_work?.score ?? null,
-                        search_knowledge: selectedScoreItem.domainScores?.search_knowledge?.score ?? null,
-                      },
-                    },
-                  ]}
+                <ConfigurationRadar
+                  scoreItem={selectedScoreItem}
                   size={680}
-                  showLegend={false}
                   hoveredDomain={hoveredDomain}
                   onHoverDomain={setHoveredDomain}
+                  animate={PLAY_MODE_ENABLED && isPlayModeActive}
                 />
               </div>
 
               {/* Atomic & Practical Metrics List - Stacked cleanly on mobile, side-by-side on desktop */}
-              <div className="lg:col-span-5 pl-0 lg:pl-2 mt-4 lg:-mt-8">
-                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 font-brand-mono text-xs sm:text-sm">
-                  {/* 1. Capability & Detail Metrics grouped strictly by Domain Order */}
-                  {(['chatting', 'math_science', 'coding', 'engineering', 'agentic_work', 'search_knowledge'] as string[]).flatMap((dId: string) => {
-                    const def = getDomainDef(dId);
-                    const scored = ALL_METRIC_DEFINITIONS.filter((m) => m.domain === dId);
-                    const detailOnly = DETAIL_ONLY_METRIC_DEFINITIONS.filter((m) => m.domain === dId);
-                    const isDomainHovered = hoveredDomain !== null;
-                    const isMatchedDomain = hoveredDomain === dId;
-
-                    return [...scored, ...detailOnly].map((m) => {
-                      const obs = selectedScoreItem.config.observations[m.id];
-                      const rawValue = obs?.rawValue;
-                      const formattedRaw = formatRawMetricValue(rawValue, m.unit);
-                      const compactName = getCompactMetricName(m.id, m.name);
-
-                      return (
-                        <div
-                          key={m.id}
-                          className={`flex min-w-0 items-center justify-between gap-2 py-1 px-1.5 rounded cursor-pointer transition-all duration-200 ${
-                            isMatchedDomain
-                              ? 'opacity-100'
-                              : isDomainHovered
-                              ? 'opacity-25 hover:opacity-100'
-                              : 'opacity-100'
-                          }`}
-                          onMouseEnter={() => setHoveredDomain(dId as DomainId)}
-                          onMouseLeave={() => setHoveredDomain(null)}
-                          title={`${m.name} (${def.nameEn}) - Raw Value: ${formattedRaw}`}
-                        >
-                          <span
-                            className={`min-w-0 truncate text-xs sm:text-sm ${
-                              isMatchedDomain ? 'font-black' : 'font-bold'
-                            }`}
-                            style={{ color: def.color }}
-                          >
-                            {compactName}
-                          </span>
-                          <span className="font-brand-mono font-black text-neutral-950 text-xs sm:text-sm shrink-0">
-                            {formattedRaw}
-                          </span>
-                        </div>
-                      );
-                    });
-                  })}
-
-                  {/* 2. Speed Metrics (Vibrant Orange #F97316) */}
-                  <div
-                    key="speed_throughput"
-                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded transition-all duration-200 ${
-                      hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
-                    }`}
-                    title="Throughput Speed - Speed Metric (Raw Value)"
-                  >
-                    <span className="font-bold truncate text-xs sm:text-sm text-[#F97316]">
-                      Throughput Speed
-                    </span>
-                    <span className="font-brand-mono font-black text-neutral-950 text-xs sm:text-sm shrink-0">
-                      {selectedScoreItem.config.openRouterData?.throughputP50TokensPerSec
-                        ? selectedScoreItem.config.openRouterData.throughputP50TokensPerSec.toFixed(1)
-                        : '--'}
-                    </span>
-                  </div>
-
-                  <div
-                    key="speed_ttft"
-                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded transition-all duration-200 ${
-                      hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
-                    }`}
-                    title="TTFT Latency - Speed Metric (Raw Value)"
-                  >
-                    <span className="font-bold truncate text-xs sm:text-sm text-[#F97316]">
-                      TTFT Latency
-                    </span>
-                    <span className="font-brand-mono font-black text-neutral-950 text-xs sm:text-sm shrink-0">
-                      {selectedScoreItem.config.openRouterData?.ttftP50Seconds
-                        ? (selectedScoreItem.config.openRouterData.ttftP50Seconds * 1000).toFixed(0)
-                        : '--'}
-                    </span>
-                  </div>
-
-                  {/* 3. Price/Cost Metrics (Vibrant Indigo #6366F1) */}
-                  <div
-                    key="cost_input"
-                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded transition-all duration-200 ${
-                      hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
-                    }`}
-                    title={selectedScoreItem.config.subscriptionData
-                      ? 'Monthly subscription price'
-                      : 'Input Price - Price Metric (Raw Value)'}
-                  >
-                    <span className="font-bold truncate text-xs sm:text-sm text-[#6366F1]">
-                      {selectedScoreItem.config.subscriptionData
-                        ? 'Monthly Price'
-                        : 'Input Price'}
-                    </span>
-                    <span className="font-brand-mono font-black text-neutral-950 text-xs sm:text-sm shrink-0">
-                      {selectedScoreItem.config.subscriptionData
-                        ? selectedScoreItem.config.subscriptionData.monthlyPriceUSD.toFixed(0)
-                        : selectedScoreItem.config.openRouterData?.inputPricePerMToken !== undefined &&
-                      selectedScoreItem.config.openRouterData?.inputPricePerMToken !== null
-                        ? selectedScoreItem.config.openRouterData.inputPricePerMToken.toFixed(2)
-                        : '--'}
-                    </span>
-                  </div>
-
-                  <div
-                    key="cost_output"
-                    className={`flex items-center justify-between gap-2 py-1 px-1.5 rounded transition-all duration-200 ${
-                      hoveredDomain !== null ? 'opacity-25 hover:opacity-100' : 'opacity-100'
-                    }`}
-                    title={selectedScoreItem.config.subscriptionData
-                      ? 'API-equivalent monthly allowance and model-usable share'
-                      : 'Output Price - Price Metric (Raw Value)'}
-                  >
-                    <span className="font-bold truncate text-xs sm:text-sm text-[#6366F1]">
-                      {selectedScoreItem.config.subscriptionData
-                        ? 'API Equivalent'
-                        : 'Output Price'}
-                    </span>
-                    <span className="font-brand-mono font-black text-neutral-950 text-xs sm:text-sm shrink-0">
-                      {selectedScoreItem.config.subscriptionData
-                        ? `${formatCostValue(selectedScoreItem.config.subscriptionData.apiEquivalentCostUSD)}${
-                          selectedScoreItem.config.subscriptionData.usableQuotaFraction < 1
-                            ? ` × ${(selectedScoreItem.config.subscriptionData.usableQuotaFraction * 100).toFixed(0)}%`
-                            : ''
-                        }`
-                        : selectedScoreItem.config.openRouterData?.outputPricePerMToken !== undefined &&
-                      selectedScoreItem.config.openRouterData?.outputPricePerMToken !== null
-                        ? selectedScoreItem.config.openRouterData.outputPricePerMToken.toFixed(2)
-                        : '--'}
-                    </span>
-                  </div>
-                </div>
+              <div className={`lg:col-span-5 pl-0 lg:pl-2 mt-4 lg:-mt-4 ${
+                PLAY_MODE_ENABLED && isPlayModeActive ? 'play-mode-metrics-enter' : ''
+              }`}>
+                <ConfigurationMetricList
+                  scoreItem={selectedScoreItem}
+                  columns={2}
+                  hoveredDomain={hoveredDomain}
+                  onHoverDomain={setHoveredDomain}
+                />
               </div>
             </div>
           </div>

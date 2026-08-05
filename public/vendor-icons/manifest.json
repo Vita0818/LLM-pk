@@ -1,0 +1,61 @@
+{
+  "note": "Vendors with 2+ distinct models in publicLeaderboardSnapshot.json. Icons are trademarks of their owners; used for identification only.",
+  "vendors": [
+    {
+      "vendor": "Anthropic",
+      "modelBrand": "Claude",
+      "file": "anthropic.svg",
+      "modelCount": 8,
+      "models": ["Claude Fable 5", "Claude Opus 4.8", "Claude Sonnet 5", "Claude Haiku 4.5", "Claude Opus 4.7", "Claude Opus 5", "Claude Opus 4.6", "Claude Sonnet 4.6"],
+      "source": "https://github.com/simple-icons/simple-icons (slug: claude, CC0)"
+    },
+    {
+      "vendor": "OpenAI",
+      "modelBrand": "GPT",
+      "file": "openai.svg",
+      "modelCount": 5,
+      "models": ["GPT-5.6 Sol", "GPT-5.6 Terra", "GPT-5.6 Luna", "GPT-5.5", "GPT-5.4"],
+      "source": "https://commons.wikimedia.org/wiki/File:OpenAI_logo_2025_(symbol).svg (public domain, trademarked)"
+    },
+    {
+      "vendor": "Google",
+      "modelBrand": "Gemini",
+      "file": "google.svg",
+      "modelCount": 5,
+      "models": ["Gemini 3.1 Pro", "Gemini 3.6 Flash", "Gemini 3.5 Flash", "Gemini 3.5 Flash-Lite", "Gemini 3.1 Flash Lite Preview"],
+      "source": "https://github.com/simple-icons/simple-icons (slug: googlegemini, CC0)"
+    },
+    {
+      "vendor": "xAI",
+      "modelBrand": "Grok",
+      "file": "xai.svg",
+      "modelCount": 3,
+      "models": ["Grok 4.5", "Grok Build 0.1", "Grok 4.3"],
+      "source": "https://github.com/homarr-labs/dashboard-icons (slug: grok)"
+    },
+    {
+      "vendor": "DeepSeek",
+      "modelBrand": "DeepSeek",
+      "file": "deepseek.svg",
+      "modelCount": 2,
+      "models": ["DeepSeek-v4-Flash Preview", "DeepSeek-v4-Pro Preview"],
+      "source": "https://github.com/simple-icons/simple-icons (slug: deepseek, CC0)"
+    },
+    {
+      "vendor": "Moonshot AI",
+      "modelBrand": "Kimi",
+      "file": "moonshot.svg",
+      "modelCount": 2,
+      "models": ["Kimi K2.6", "Kimi K3"],
+      "source": "https://github.com/simple-icons/simple-icons (slug: kimi, CC0)"
+    },
+    {
+      "vendor": "Alibaba",
+      "modelBrand": "Qwen",
+      "file": "alibaba.svg",
+      "modelCount": 2,
+      "models": ["Qwen3.7-Max", "Qwen3.7-Plus"],
+      "source": "https://github.com/simple-icons/simple-icons (slug: qwen, CC0)"
+    }
+  ]
+}

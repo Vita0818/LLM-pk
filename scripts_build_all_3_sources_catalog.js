@@ -1200,7 +1200,15 @@ async function buildVerifiedCatalog() {
 
     for (const [modelKey, row] of canonicalRows) {
       const cardId = `card-arena-${modelKey}`;
-      const scope = classifySourceModelScope(cardId, row.exactSourceModelName, row.sourceRecordId, row.modelId);
+      const modelUrl = row.sourceRecord?.modelUrl;
+      const scope = classifySourceModelScope(
+        cardId,
+        row.exactSourceModelName,
+        row.sourceRecordId,
+        row.modelId,
+        row.sourceRecord?.modelKey,
+        modelUrl,
+      );
       if (!scope) continue;
       upsertCard({
         id: cardId,
@@ -1215,6 +1223,9 @@ async function buildVerifiedCatalog() {
           source: 'arena',
           sourceRecordId: row.sourceRecordId || row.modelId || row.exactSourceModelName,
           exactSourceModelName: row.exactSourceModelName,
+          modelKey: row.sourceRecord?.modelKey ?? null,
+          modelUrl: modelUrl ?? null,
+          releaseType: row.sourceRecord?.releaseType ?? null,
           selectionMethod: 'official-arena-raw-extraction',
         },
       });

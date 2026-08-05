@@ -70,7 +70,8 @@
       "name": "DeepSeek",
       "officialModelsUrl": "https://api-docs.deepseek.com/quick_start/pricing",
       "productLines": [
-        { "id": "deepseek_v4_flash", "name": "DeepSeek V4 Flash", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bdeepseek[- ]v?4[- ]flash\\b"] },
+        { "id": "deepseek_v4_flash_0731", "name": "DeepSeek V4 Flash 0731", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bdeepseek[- ]v?4[- ]flash[- ]0731\\b", "2083084415157022911"] },
+        { "id": "deepseek_v4_flash", "name": "DeepSeek V4 Flash Preview", "tier": "preview", "rankingClass": "formal_text_agent", "patterns": ["\\bdeepseek[- ]v?4[- ]flash\\b"] },
         { "id": "deepseek_v4_pro", "name": "DeepSeek V4 Pro", "tier": "official", "rankingClass": "formal_text_agent", "patterns": ["\\bdeepseek[- ]v?4[- ]pro\\b"] }
       ]
     },

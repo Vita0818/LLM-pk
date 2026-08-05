@@ -85,20 +85,27 @@ export const API_PROFILE_FAMILIES: readonly ApiProfileFamilyEvidence[] = [
     ],
   },
   {
+    productLineId: 'deepseek_v4_flash_0731',
+    tiers: [
+      tier('high', 'High', 3, ['card-arena-deepseek-v4-flash-high']),
+      tier('max', 'Max', 5, ['card-aa-deepseek-v4-flash']),
+    ],
+  },
+  {
     productLineId: 'deepseek_v4_flash',
     tiers: [
       tier('none', 'None', 0, ['card-aa-deepseek-v4-flash-non-reasoning', 'card-arena-deepseek-v4-flash']),
-      tier('high', 'High', 3, ['card-aa-deepseek-v4-flash-high', 'card-arena-deepseek-v4-flash-thinking']),
+      tier('high', 'High', 3, ['card-aa-deepseek-v4-flash-0420-high', 'card-arena-deepseek-v4-flash-high-preview']),
       // OpenRouter publishes XHigh availability, but no XHigh capability card.
       tier('xhigh', 'XHigh', 4),
-      tier('max', 'Max', 5, ['card-aa-deepseek-v4-flash']),
+      tier('max', 'Max', 5, ['card-aa-deepseek-v4-flash-0420']),
     ],
   },
   {
     productLineId: 'deepseek_v4_pro',
     tiers: [
       tier('none', 'None', 0, ['card-aa-deepseek-v4-pro-non-reasoning', 'card-arena-deepseek-v4-pro']),
-      tier('high', 'High', 3, ['card-aa-deepseek-v4-pro-high', 'card-arena-deepseek-v4-pro-thinking']),
+      tier('high', 'High', 3, ['card-aa-deepseek-v4-pro-high', 'card-arena-deepseek-v4-pro-high-preview']),
       tier('xhigh', 'XHigh', 4),
       tier('max', 'Max', 5, ['card-aa-deepseek-v4-pro']),
     ],

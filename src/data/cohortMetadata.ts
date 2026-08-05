@@ -6,9 +6,9 @@ import { CohortSnapshot } from '../types/llm_pk';
  */
 export const CURRENT_COHORT_SNAPSHOT: CohortSnapshot = {
   id: 'recent_3_months_2026',
-  name: '近 3 个月新发布前沿模型快照 (2026-04-28 至 2026-07-28)',
+  name: '近 3 个月新发布前沿模型快照（截至 2026-08-04）',
   scoringVersion: 'Scoring v1.2 + Weighting v2.1',
-  snapshotDate: '2026-07-28',
-  totalConfigs: 37,
+  snapshotDate: '2026-08-04',
+  totalConfigs: 38,
   description: '榜单仅使用已映射且可追溯至 Artificial Analysis、Arena 或 OpenRouter 的来源记录；覆盖状态单独披露。',
 };

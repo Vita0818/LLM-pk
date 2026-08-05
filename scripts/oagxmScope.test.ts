@@ -10,6 +10,7 @@ import { OAGXM_SCOPE, classifyOagxmModel } from '../src/data/oagxmScope';
  */
 const expectedProductLines: Array<[string, string]> = [
   ['DeepSeek-v4-Flash', 'deepseek_v4_flash'],
+  ['DeepSeek-v4-Flash-0731', 'deepseek_v4_flash_0731'],
   ['DeepSeek-v4-Pro', 'deepseek_v4_pro'],
   ['GLM-5.2', 'glm_52'],
   ['Hy3', 'hunyuan_hy3'],
@@ -68,7 +69,7 @@ for (const [sourceName, productLineId] of expectedProductLines) {
 }
 
 const configuredProductLines = OAGXM_SCOPE.vendors.flatMap((vendor) => vendor.productLines);
-assert.equal(configuredProductLines.length, 47, 'Data.md inventory plus Opus 5 should have 47 product lines');
+assert.equal(configuredProductLines.length, 48, 'Data.md inventory plus Opus 5 and V4 Flash 0731 should have 48 product lines');
 assert.ok(
   configuredProductLines.every((line) => line.rankingClass === 'formal_text_agent'),
   'Image/audio/safety-only product lines must not enter the Data.md capability scope',
@@ -76,5 +77,21 @@ assert.ok(
 assert.equal(classifyOagxmModel('GPT Image 2'), null);
 assert.equal(classifyOagxmModel('Nano Banana 2'), null);
 assert.equal(classifyOagxmModel('Llama Guard 4'), null);
+assert.equal(
+  classifyOagxmModel(
+    'deepseek-v4-flash-high',
+    'https://x.com/deepseek_ai/status/2083084415157022911',
+  )?.productLineId,
+  'deepseek_v4_flash_0731',
+  'The Arena row linked to the July 31 DeepSeek announcement must resolve to 0731.',
+);
+assert.equal(
+  classifyOagxmModel(
+    'deepseek-v4-flash-high-preview',
+    'https://api-docs.deepseek.com/news/news260424',
+  )?.productLineId,
+  'deepseek_v4_flash',
+  'The Arena row linked to the April 24 announcement must remain Preview.',
+);
 
 console.log(`OAGXM scope inventory passed: ${configuredProductLines.length} product lines.`);

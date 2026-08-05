@@ -4,6 +4,7 @@ import { DOMAIN_DEFINITIONS } from '../engine/scoringEngine';
 import { COVERAGE_STATUS_LABELS } from '../engine/scoringConfig';
 import { RadarChart, RadarSeries } from './RadarChart';
 import { ConfigNameDisplay } from './ConfigNameDisplay';
+import { getProviderBrandTheme } from '../utils/providerColors';
 import { CheckCircle2, ChevronRight, Info } from 'lucide-react';
 import {
   formatPracticalAdjustment,
@@ -122,25 +123,31 @@ export const ModelDetailView: React.FC<ModelDetailViewProps> = ({
             {/* Expanded Full-Width Massive Radar Chart & 6 Domain Scores */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-4">
               <div className="lg:col-span-8 flex justify-center items-center py-6">
-                <RadarChart
-                  seriesList={[
-                    {
-                      id: selectedItem.config.id,
-                      name: selectedItem.config.name,
-                      color: '#2563EB',
-                      scores: {
-                        chatting: selectedItem.domainScores.chatting.score,
-                        math_science: selectedItem.domainScores.math_science.score,
-                        coding: selectedItem.domainScores.coding.score,
-                        engineering: selectedItem.domainScores.engineering.score,
-                        agentic_work: selectedItem.domainScores.agentic_work.score,
-                        search_knowledge: selectedItem.domainScores.search_knowledge.score,
-                      },
-                    },
-                  ]}
-                  size={760}
-                  showLegend={false}
-                />
+                {(() => {
+                  const brandTheme = getProviderBrandTheme(selectedItem.config.provider);
+                  return (
+                    <RadarChart
+                      seriesList={[
+                        {
+                          id: selectedItem.config.id,
+                          name: selectedItem.config.name,
+                          color: brandTheme.color,
+                          fillColor: brandTheme.fillColor,
+                          scores: {
+                            chatting: selectedItem.domainScores.chatting.score,
+                            math_science: selectedItem.domainScores.math_science.score,
+                            coding: selectedItem.domainScores.coding.score,
+                            engineering: selectedItem.domainScores.engineering.score,
+                            agentic_work: selectedItem.domainScores.agentic_work.score,
+                            search_knowledge: selectedItem.domainScores.search_knowledge.score,
+                          },
+                        },
+                      ]}
+                      size={760}
+                      showLegend={false}
+                    />
+                  );
+                })()}
               </div>
 
               <div className="lg:col-span-4 space-y-4">
@@ -259,25 +266,31 @@ export const ModelDetailView: React.FC<ModelDetailViewProps> = ({
               </div>
 
               <div className="flex justify-center py-4">
-                <RadarChart
-                  seriesList={[
-                    {
-                      id: item.config.id,
-                      name: item.config.name,
-                      color: '#2563EB',
-                      scores: {
-                        chatting: item.domainScores.chatting.score,
-                        math_science: item.domainScores.math_science.score,
-                        coding: item.domainScores.coding.score,
-                        engineering: item.domainScores.engineering.score,
-                        agentic_work: item.domainScores.agentic_work.score,
-                        search_knowledge: item.domainScores.search_knowledge.score,
-                      },
-                    },
-                  ]}
-                  size={380}
-                  showLegend={false}
-                />
+                {(() => {
+                  const brandTheme = getProviderBrandTheme(item.config.provider);
+                  return (
+                    <RadarChart
+                      seriesList={[
+                        {
+                          id: item.config.id,
+                          name: item.config.name,
+                          color: brandTheme.color,
+                          fillColor: brandTheme.fillColor,
+                          scores: {
+                            chatting: item.domainScores.chatting.score,
+                            math_science: item.domainScores.math_science.score,
+                            coding: item.domainScores.coding.score,
+                            engineering: item.domainScores.engineering.score,
+                            agentic_work: item.domainScores.agentic_work.score,
+                            search_knowledge: item.domainScores.search_knowledge.score,
+                          },
+                        },
+                      ]}
+                      size={320}
+                      showLegend={false}
+                    />
+                  );
+                })()}
               </div>
             </div>
           ))}

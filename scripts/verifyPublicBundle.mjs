@@ -15,6 +15,9 @@ const forbiddenMarkers = [
   'llmpk_admin_mapping',
   'exportConfigurationBackup',
   'importConfigurationBackup',
+  ...(process.env.VITE_ENABLE_PLAY_MODE === 'false'
+    ? ['播放模式']
+    : []),
 ];
 
 function collectFiles(directory) {
