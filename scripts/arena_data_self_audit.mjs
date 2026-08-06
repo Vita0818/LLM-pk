@@ -40,6 +40,9 @@ const EXPECTED_HOST_BY_SOURCE = {
   openrouter: 'openrouter.ai',
 };
 
+const SOURCE_CATALOG_SCOPE_ID = 'llmpk-source-catalog';
+const SOURCE_CATALOG_SCOPE_VERSION = 'v1';
+
 const EXPECTED_SOURCE_VENDOR_PATTERNS = {
   openai: [/^openai$/i, /^openai\//i],
   anthropic: [/^anthropic$/i, /^anthropic\//i],
@@ -49,7 +52,7 @@ const EXPECTED_SOURCE_VENDOR_PATTERNS = {
   deepseek: [/^deepseek(?: ai)?$/i, /^deepseek\//i],
   zai: [/^(?:z[.]?ai|zhipu(?: ai)?)$/i, /^(?:z-ai|zhipu)\//i],
   tencent: [/^(?:tencent|tencent hunyuan|gmicloud)$/i, /^(?:tencent|hunyuan|gmicloud)\//i],
-  moonshot: [/^moonshot(?: ai)?$/i, /^moonshot(?:ai)?\//i],
+  moonshot: [/^(?:moonshot(?: ai)?|kimi)$/i, /^moonshot(?:ai)?\//i],
   minimax: [/^minimax$/i, /^minimax\//i],
   alibaba: [/^(?:alibaba(?: cloud)?|qwen)$/i, /^(?:alibaba|qwen)\//i],
   bytedance: [/^(?:bytedance|volcengine|seed)$/i, /^(?:bytedance|volcengine|seed)\//i],
@@ -57,7 +60,7 @@ const EXPECTED_SOURCE_VENDOR_PATTERNS = {
   kwaipilot: [/^(?:kwaipilot|kwai)$/i, /^(?:kwaipilot|kwai)\//i],
   xiaomi: [/^xiaomi$/i, /^xiaomi\//i],
   stepfun: [/^(?:stepfun|step fun)$/i, /^stepfun\//i],
-  mistral: [/^(?:mistral|mistral ai)$/i, /^mistral\//i],
+  mistral: [/^(?:mistral|mistral ai)$/i, /^mistral(?:ai)?\//i],
   nvidia: [/^(?:nvidia|nvidia corporation)$/i, /^nvidia\//i],
 };
 
@@ -235,6 +238,17 @@ function scopeMetadataOf(cardOrObservation) {
   return metadata.scope && typeof metadata.scope === 'object' ? metadata.scope : null;
 }
 
+function isValidSourceCatalogScope(scope) {
+  return scope?.scopeId === SOURCE_CATALOG_SCOPE_ID
+    && scope.scopeVersion === SOURCE_CATALOG_SCOPE_VERSION
+    && scope.vendorId === 'source-catalog'
+    && scope.vendorName === 'Cross-source catalog'
+    && isNonEmptyString(scope.productLineId)
+    && scope.productLineId.startsWith('source-profile-')
+    && isNonEmptyString(scope.canonicalProfileKey)
+    && scope.rankingClass === 'formal_text_agent';
+}
+
 function scopeLineIndex(scope) {
   const index = new Map();
   scope.vendors.forEach((vendor) => {
@@ -292,9 +306,15 @@ function auditOagxmScope(scope, cards, observations, failures, warnings) {
   const cardCounts = {};
   const observationCounts = {};
   const findings = [];
+  let sourceCatalogCardCount = 0;
+  let sourceCatalogObservationCount = 0;
 
   cards.forEach((card) => {
     const cardScope = scopeMetadataOf(card);
+    if (isValidSourceCatalogScope(cardScope)) {
+      sourceCatalogCardCount += 1;
+      return;
+    }
     if (
       !cardScope
       || cardScope.scopeId !== scope.scopeId
@@ -314,7 +334,13 @@ function auditOagxmScope(scope, cards, observations, failures, warnings) {
     }
 
     const identity = sourceIdentityOfCard(card);
-    const identityText = [card.exactSourceModelName, identity.exactSourceModelName, identity.sourceRecordId]
+    const identityText = [
+      card.exactSourceModelName,
+      identity.exactSourceModelName,
+      identity.sourceRecordId,
+      identity.modelKey,
+      identity.modelUrl,
+    ]
       .filter(isNonEmptyString)
       .join('\n');
     const matchesProductLine = productLineMatchesSourceIdentity(productLine, identityText);
@@ -323,14 +349,15 @@ function auditOagxmScope(scope, cards, observations, failures, warnings) {
       return;
     }
 
-    const matchingProductLines = [...lineIndex.entries()]
-      .filter(([, { productLine: candidate }]) => productLineMatchesSourceIdentity(candidate, identityText))
-      .map(([key]) => key);
-    if (matchingProductLines.length !== 1 || matchingProductLines[0] !== `${vendor.id}:${productLine.id}`) {
+    const classifiedProductLine = classifyOagxmScopeIdentity(scope, identityText);
+    if (
+      classifiedProductLine?.vendorId !== vendor.id
+      || classifiedProductLine?.productLineId !== productLine.id
+    ) {
       findings.push({
         cardId: card.id,
-        issue: 'Card source identity matches multiple OAGXM product-line selectors.',
-        matchingProductLines,
+        issue: 'Card source identity resolves to a different prioritized OAGXM product-line selector.',
+        classifiedProductLine,
       });
       return;
     }
@@ -372,6 +399,10 @@ function auditOagxmScope(scope, cards, observations, failures, warnings) {
       || cardScope.rankingClass !== observationScope.rankingClass
     ) {
       findings.push({ observationId: observation.id, issue: 'Observation scope provenance does not exactly match its source card.' });
+      return;
+    }
+    if (isValidSourceCatalogScope(cardScope)) {
+      sourceCatalogObservationCount += 1;
       return;
     }
     const key = `${cardScope.vendorId}:${cardScope.productLineId}`;
@@ -417,6 +448,8 @@ function auditOagxmScope(scope, cards, observations, failures, warnings) {
     unobservedProductLines,
     formalTextAgentProductLineCount: productLines.filter((line) => line.rankingClass === 'formal_text_agent').length,
     specializedCatalogOnlyProductLineCount: productLines.filter((line) => line.rankingClass === 'specialized_catalog_only').length,
+    sourceCatalogCardCount,
+    sourceCatalogObservationCount,
     findingCount: findings.length,
   };
 }
@@ -530,7 +563,12 @@ function auditArena(rawManifest, scope, cards, observations, failures, warnings)
     const scopedDuplicateRowCount = scopedSourceRows.length - selectedScopedSourceRows.size;
 
     const databaseRows = arenaObservationRows
-      .filter(({ observation }) => observation.metricId === metricId && isFiniteNumber(observation.rawValue));
+      .filter(({ observation, card }) => (
+        observation.metricId === metricId
+        && isFiniteNumber(observation.rawValue)
+        && scopeMetadataOf(card)?.scopeId === scope.scopeId
+        && scopeMetadataOf(card)?.scopeVersion === scope.schemaVersion
+      ));
     const databaseGroups = new Map();
     databaseRows.forEach((entry) => {
       // The source record ID, not the catalog card label, is the authoritative
@@ -616,7 +654,7 @@ function auditArena(rawManifest, scope, cards, observations, failures, warnings)
       databaseAvailableCount: databaseGroups.size,
       databaseAvailableRowCount: databaseRows.length,
       // Preserve the full raw-source facts for traceability.  For example,
-      // the WebDev snapshot remains 103 extracted / 1 duplicate / 102 unique
+      // the WebDev snapshot remains 110 extracted / 1 duplicate / 109 unique
       // even when only its OAGXM rows are admitted to this catalog.
       sourceExtractedRowCount: rawMetric.rows.length,
       sourceDuplicateRowCount: calculatedDuplicateRowCount,
@@ -648,10 +686,10 @@ function auditArena(rawManifest, scope, cards, observations, failures, warnings)
   }
 
   const webdev = metrics.arena_code_webdev;
-  if (webdev?.sourceExtractedRowCount !== 103 || webdev?.sourceDuplicateRowCount !== 1 || webdev?.sourceUniqueModelCount !== 102) {
+  if (webdev?.sourceExtractedRowCount !== 110 || webdev?.sourceDuplicateRowCount !== 1 || webdev?.sourceUniqueModelCount !== 109) {
     warnings.push({
       scope: 'arena',
-      issue: 'WebDev source changes may be legitimate, but the recorded full-source snapshot does not have the expected 103 / 1 / 102 audit facts.',
+      issue: 'WebDev source changes may be legitimate, but the recorded full-source snapshot does not have the expected 110 / 1 / 109 audit facts.',
       actual: webdev,
     });
   }
@@ -789,7 +827,7 @@ function auditCatalog(cards, observations, failures, warnings) {
     if (isFiniteNumber(metadata.reportedRawValue) && !stableNumberEquals(observation.rawValue, metadata.reportedRawValue)) {
       validationFailures.push({ observationId: observation.id, metricId: observation.metricId, issue: 'Stored raw value differs from the reported source value.', rawValue: observation.rawValue, reportedRawValue: metadata.reportedRawValue });
     }
-    if (/synthetic|fallback|default.{0,30}score|generated.{0,30}score|demo.{0,30}score/i.test(sourceMetadataText)) {
+    if (/synthetic.{0,30}(?:observation|score)|fallback.{0,30}score|default.{0,30}score|generated.{0,30}score|demo.{0,30}score/i.test(sourceMetadataText)) {
       validationFailures.push({ observationId: observation.id, metricId: observation.metricId, issue: 'Observation provenance contains a prohibited placeholder marker.' });
     }
     if ((observation.rawValue === 0 || observation.rawValue === 50) && (!isNonEmptyString(sourceRecordId) || !isNonEmptyString(sourceField))) {
@@ -892,7 +930,10 @@ function auditRuntimePaths(failures) {
   const radarChart = existsSync(resolve(sourceRoot, 'components', 'RadarChart.tsx'))
     ? stripComments(readFileSync(resolve(sourceRoot, 'components', 'RadarChart.tsx'), 'utf8'))
     : '';
-  const legacyMissingScoreFallback = /raw\s*:\s*null[\s\S]{0,160}s\s*:\s*50/.test(scoringEngine);
+  const legacyMissingScoreFallback = (
+    /rawCapabilityScore\s*:\s*[^,\n]*(?:\?\?|\|\|)\s*50/.test(scoringEngine)
+    || /domainScore\s*:\s*[^,\n]*(?:\?\?|\|\|)\s*50/.test(scoringEngine)
+  );
   const radarMissingScoreFallback = /domainScore\s*\?\?\s*50/.test(radarChart);
 
   if (runtimeMatches.length) failures.push({ scope: 'runtime', issue: 'Synthetic/default score code remains reachable in the production import graph.', findings: runtimeMatches });
@@ -925,6 +966,7 @@ function markdown(report) {
     '',
     `- Scope provenance findings: ${report.scope.findingCount}`,
     `- Product lines with no source record in this snapshot: ${report.scope.unobservedProductLines.length}`,
+    `- General source-catalog records outside this curated scope: ${report.scope.sourceCatalogCardCount} cards / ${report.scope.sourceCatalogObservationCount} observations; card and observation scopes still reconcile exactly.`,
     report.scope.specializedCatalogOnlyProductLineCount > 0
       ? `- ${report.scope.formalTextAgentProductLineCount} formal text/agent lines and ${report.scope.specializedCatalogOnlyProductLineCount} specialized catalog-only lines are kept distinct; specialized lines cannot acquire missing AA/Arena scores.`
       : `- All ${report.scope.formalTextAgentProductLineCount} configured product lines are formal text/agent models; no image/audio/safety-only line is admitted to this capability scope.`,

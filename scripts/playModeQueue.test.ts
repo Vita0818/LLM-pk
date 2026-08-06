@@ -15,8 +15,8 @@ const assert = (condition: unknown, message: string) => {
   if (!condition) throw new Error(message);
 };
 
-assert(snapshot.scores.length === 62, 'Fixture should contain 62 route rows.');
-assert(queue.length === 38, `Expected 38 playback items, received ${queue.length}.`);
+assert(snapshot.scores.length === 64, 'Fixture should contain 64 route rows.');
+assert(queue.length === 40, `Expected 40 playback items, received ${queue.length}.`);
 assert(
   new Set(queue.map(getPlayModeRouteGroupKey)).size === queue.length,
   'Playback queue must contain one representative per identical radar route group.',
@@ -59,6 +59,7 @@ const expectedRepresentatives = [
   'Grok 4.3 High | Chat | SuperGrok',
   'Grok 4.5 High | Grok Build | SuperGrok',
   'Grok Build 0.1 Max | Arena Agent Mode | SuperGrok',
+  'Muse Spark 1.2 XHigh | Chat | Meta API',
 ];
 
 const queueNames = new Set(queue.map((item) => item.config.name));
@@ -80,4 +81,4 @@ for (let index = 1; index < queue.length; index += 1) {
   );
 }
 
-console.log('Play mode queue keeps 38 best-route radar profiles in rank order: PASS');
+console.log('Play mode queue keeps 40 best-route radar profiles in rank order: PASS');

@@ -25,6 +25,19 @@ The command:
 Failed runs remain under `.cache/oagxm-source-snapshots/<run-id>` for
 inspection and do not replace the published files.
 
+Snapshot refresh deliberately does not promote a model into the reader-facing
+catalog. After reviewing the validation report, rebuild the source cards with:
+
+```bash
+npm run rebuild:source-catalog
+```
+
+The rebuild copies Artificial Analysis records, deduplicated Arena rows, and
+OpenRouter catalog plus Standard-endpoint aggregates into `src/data/seedCards.ts`.
+Missing upstream values remain missing. The configuration curation layer then
+admits only profiles that meet its capability-domain and evidence rules; run
+`npm test`, the audit commands, and `npm run build` before publishing.
+
 For OpenRouter, the raw provider-endpoint rows are kept intact. A second
 `modelAggregates` layer summarizes every model across all accepted Standard
 endpoints. Each of input price, output price, time to first token, and output

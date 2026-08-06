@@ -31,6 +31,7 @@ import {
   BUILT_IN_CONFIGURATION_PRESETS,
   BUILT_IN_CONFIGURATION_RELEASE_CUTOFF,
   READER_APPROVED_SOURCE_CATALOG_PRODUCT_LINE_IDS,
+  buildPresetCoverageProfiles,
   type BuiltInConfigurationPreset,
 } from '../src/data/builtInConfigurationPresets';
 import type {
@@ -587,7 +588,10 @@ assert.deepEqual(
   reconciledV3Store.getLinkedCardStack(v2PersistedBox.id).map(({ card }) => (
     card.metadataJson?.scope?.scopeVersion
   )),
-  ['oagxm-current-product-lines/v3-data-md', 'oagxm-current-product-lines/v3-data-md'],
+  [
+    'oagxm-current-product-lines/v4-muse-spark-1-2',
+    'oagxm-current-product-lines/v4-muse-spark-1-2',
+  ],
 );
 
 // The verified catalog is bundled and must not be duplicated into browser
@@ -767,17 +771,29 @@ assert.equal(
   false,
   'A Chat configuration must not inflate the eligible population for Agent-only evidence.',
 );
-assert.deepEqual(
-  new Set(
-    BUILT_IN_CONFIGURATION_PRESETS
-      .filter((preset) => preset.origin === 'source-catalog')
-      .map((preset) => preset.productLineId),
-  ),
-  new Set(READER_APPROVED_SOURCE_CATALOG_PRODUCT_LINE_IDS.filter(
-    (productLineId) => productLineId !== 'source-profile-grok-build-0-1-0616',
-  )),
-  'Only reader-approved AA-only configurations may enter through the τ³ five-domain path; Grok Build is represented by its real Agent execution.',
+const shippedSourceCatalogPresets = BUILT_IN_CONFIGURATION_PRESETS.filter(
+  (preset) => preset.origin === 'source-catalog',
 );
+const sourceCatalogCoverageByPreset = buildPresetCoverageProfiles(shippedSourceCatalogPresets);
+const readerApprovedSourceCatalogProductLines = new Set<string>(
+  READER_APPROVED_SOURCE_CATALOG_PRODUCT_LINE_IDS,
+);
+for (const productLineId of READER_APPROVED_SOURCE_CATALOG_PRODUCT_LINE_IDS) {
+  if (productLineId === 'source-profile-grok-build-0-1-0616') continue;
+  assert.ok(
+    shippedSourceCatalogPresets.some((preset) => preset.productLineId === productLineId),
+    `Reader-approved source-catalog product line ${productLineId} must remain shipped.`,
+  );
+}
+for (const preset of shippedSourceCatalogPresets) {
+  if (readerApprovedSourceCatalogProductLines.has(preset.productLineId)) continue;
+  const coverage = sourceCatalogCoverageByPreset.get(preset.id);
+  assert.ok(
+    coverage?.availableDomainIds.includes('chatting')
+      || (coverage?.compatibleHarnessMetricCount || 0) > 0,
+    `Unapproved source-catalog preset ${preset.id} needs direct Chatting or compatible production-harness evidence.`,
+  );
+}
 assert.ok(
   BUILT_IN_CONFIGURATION_CURATION_ROWS.every(
     (row) => (
@@ -852,6 +868,7 @@ for (const presetId of [
   'builtin.data-md.longcat-2-0.max',
   'builtin.source-catalog.source-profile-gemini-3-1-flash-lite-preview.gemini-3-1-flash-lite-preview',
   'builtin.source-catalog.source-profile-north-mini-code.north-mini-code',
+  'builtin.muse-spark-1-2.xhigh',
 ]) {
   assert.ok(
     BUILT_IN_CONFIGURATION_PRESETS.some((preset) => preset.id === presetId),
@@ -902,6 +919,10 @@ for (const omittedPresetId of [
   'builtin.source-catalog.source-profile-motif-3-beta.motif-3-beta',
   'builtin.source-catalog.source-profile-nex-n2-pro.nex-n2-pro',
   'builtin.source-catalog.source-profile-ring-2-6-1t.ring-2-6-1t',
+  'builtin.muse-spark-1-2.minimal',
+  'builtin.muse-spark-1-2.low',
+  'builtin.muse-spark-1-2.medium',
+  'builtin.muse-spark-1-2.high',
 ]) {
   assert.ok(
     !BUILT_IN_CONFIGURATION_PRESETS.some((preset) => preset.id === omittedPresetId),
@@ -1033,14 +1054,14 @@ const expectedSubscriptionPlans = [
     key: 'chatgpt-plus',
     providerLabel: 'ChatGPT Plus',
     monthlyPriceUSD: 20,
-    apiEquivalentCostUSD: 125,
+    apiEquivalentCostUSD: 225,
     targets: chatGptPlusTargets,
   },
   {
     key: 'chatgpt-pro-20x',
     providerLabel: 'ChatGPT Pro 20×',
     monthlyPriceUSD: 200,
-    apiEquivalentCostUSD: 2500,
+    apiEquivalentCostUSD: 4500,
     targets: chatGptPlusTargets.slice(0, 1),
   },
   {
@@ -1242,6 +1263,8 @@ assert.deepEqual(
   reconciledV3Store.getLinkedCardStack(deepSeek0731Box.id).map(({ card }) => card.id),
   [
     'card-aa-deepseek-v4-flash',
+    'card-openrouter-deepseek-deepseek-v4-flash-0731',
+    'card-openrouter-standard-performance-deepseek-deepseek-v4-flash-0731',
     'card-arena-deepseek-v4-flash-high',
   ],
   'The 0731 configuration must use only independently versioned 0731 cards.',
@@ -1257,15 +1280,45 @@ assert.equal(
   1576.5384851960803,
 );
 assert.deepEqual(deepSeek0731Config.openRouterData, {
-  inputPricePerMToken: 0.14,
-  outputPricePerMToken: 0.28,
-  ttftP50Seconds: 1.31791696599998,
-  throughputP50TokensPerSec: 122.691560555279,
+  inputPricePerMToken: 0.1407142857142857,
+  outputPricePerMToken: 0.28952380952380946,
+  ttftP50Seconds: 1.1805238095238095,
+  throughputP50TokensPerSec: 55.523809523809526,
 });
 const deepSeek0731Score = scoreByConfigurationId.get(deepSeek0731Box.id);
 assert.equal(deepSeek0731Score?.availableDomainCount, 5);
 assert.equal(deepSeek0731Score?.eligibleForGlobalLeaderboard, true);
 assert.notEqual(deepSeek0731Score?.practicalBreakdown.practicalScore, null);
+const museSpark12Box = installedPresetBoxes.find((box) => (
+  box.builtInPresetId === 'builtin.muse-spark-1-2.xhigh'
+));
+assert.ok(museSpark12Box, 'Muse Spark 1.2 XHigh must be installed as its score-ready profile.');
+assert.deepEqual(
+  reconciledV3Store.getLinkedCardStack(museSpark12Box.id).map(({ card }) => card.id),
+  [
+    'card-aa-muse-spark-1-2',
+    'card-openrouter-meta-muse-spark-1-2',
+    'card-openrouter-standard-performance-meta-muse-spark-1-2',
+  ],
+  'Muse Spark 1.2 XHigh must combine only its exact AA and OpenRouter source cards.',
+);
+const museSpark12Config = reconciledV3Store.buildLLMConfiguration(museSpark12Box);
+assert.equal(
+  Object.keys(museSpark12Config.observations).some((metricId) => metricId.startsWith('arena_')),
+  false,
+  'Muse Spark 1.2 must preserve missing Arena evidence instead of inferring it.',
+);
+assert.deepEqual(museSpark12Config.openRouterData, {
+  inputPricePerMToken: 1.25,
+  outputPricePerMToken: 4.25,
+  ttftP50Seconds: 5.3395,
+  throughputP50TokensPerSec: 101,
+});
+const museSpark12Score = scoreByConfigurationId.get(museSpark12Box.id);
+assert.equal(museSpark12Score?.availableDomainCount, 5);
+assert.notEqual(museSpark12Score?.rawCapabilityScore, null);
+assert.notEqual(museSpark12Score?.practicalBreakdown.practicalScore, null);
+assert.equal(museSpark12Score?.eligibleForGlobalLeaderboard, true);
 for (const presetId of [
   'builtin.harness.claude-fable-5.max.claude-code',
   'builtin.harness.claude-opus-4-6.max.claude-code',
@@ -1471,32 +1524,44 @@ for (const [
     'builtin.source-catalog.source-profile-grok-4-3-high.grok-4-3-high',
     1.25,
     2.5,
-    0.6825,
-    94,
+    0.67375,
+    87.5,
   ],
   [
     'builtin.agent.arena.grok-build-0-1.max',
     1,
     2,
-    0.61,
-    116.25,
+    0.6775,
+    123.5,
   ],
   [
     'builtin.source-catalog.source-profile-inkling-xhigh.inkling-xhigh',
-    1,
+    0.9833333333333332,
     4.05,
-    0.701,
-    57.666666666666664,
+    0.6008333333333333,
+    127,
   ],
 ] as const) {
   const box = installedPresetBoxes.find((candidate) => candidate.builtInPresetId === presetId);
   assert.ok(box, `Practical-source repair preset ${presetId} must be installed.`);
   const configuration = reconciledV3Store.buildLLMConfiguration(box);
   assert.ok(configuration.openRouterData, `${presetId} must have complete practical data.`);
-  assert.ok(Math.abs(configuration.openRouterData.inputPricePerMToken - expectedInputPrice) < 1e-9);
-  assert.ok(Math.abs(configuration.openRouterData.outputPricePerMToken - expectedOutputPrice) < 1e-9);
-  assert.ok(Math.abs(configuration.openRouterData.ttftP50Seconds - expectedTtftSeconds) < 1e-9);
-  assert.ok(Math.abs(configuration.openRouterData.throughputP50TokensPerSec - expectedThroughput) < 1e-9);
+  assert.ok(
+    Math.abs(configuration.openRouterData.inputPricePerMToken - expectedInputPrice) < 1e-9,
+    `${presetId} input price changed to ${configuration.openRouterData.inputPricePerMToken}.`,
+  );
+  assert.ok(
+    Math.abs(configuration.openRouterData.outputPricePerMToken - expectedOutputPrice) < 1e-9,
+    `${presetId} output price changed to ${configuration.openRouterData.outputPricePerMToken}.`,
+  );
+  assert.ok(
+    Math.abs(configuration.openRouterData.ttftP50Seconds - expectedTtftSeconds) < 1e-9,
+    `${presetId} TTFT changed to ${configuration.openRouterData.ttftP50Seconds}.`,
+  );
+  assert.ok(
+    Math.abs(configuration.openRouterData.throughputP50TokensPerSec - expectedThroughput) < 1e-9,
+    `${presetId} throughput changed to ${configuration.openRouterData.throughputP50TokensPerSec}.`,
+  );
 }
 
 const firstInstalledPreset = installedPresetBoxes[0];

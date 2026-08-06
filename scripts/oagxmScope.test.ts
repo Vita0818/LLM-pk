@@ -4,7 +4,7 @@ import { OAGXM_SCOPE, classifyOagxmModel } from '../src/data/oagxmScope';
 /**
  * The scope is deliberately an explicit Data.md product inventory, rather
  * than a vendor-wide prefix filter.  These representative names cover every
- * product line requested from Data.md plus the newly added Claude Opus 5.
+ * product line requested from Data.md plus newly source-backed product lines.
  * Gemini 3.1 Pro and its Preview are intentionally one product line with
  * source-published profiles kept as separate source cards.
  */
@@ -47,6 +47,7 @@ const expectedProductLines: Array<[string, string]> = [
   ['Gemini 3.1 Flash Lite', 'gemini_31_flash_lite'],
   ['Gemini 2.5 Flash Lite', 'gemini_25_flash_lite'],
   ['Grok 4.5', 'grok_45'],
+  ['Muse Spark 1.2', 'muse_spark_12'],
   ['Muse Spark 1.1', 'muse_spark_11'],
   ['Mistral Medium 3.5', 'mistral_medium_35'],
   ['Gemma 4 31B', 'gemma_4_31b'],
@@ -69,7 +70,7 @@ for (const [sourceName, productLineId] of expectedProductLines) {
 }
 
 const configuredProductLines = OAGXM_SCOPE.vendors.flatMap((vendor) => vendor.productLines);
-assert.equal(configuredProductLines.length, 48, 'Data.md inventory plus Opus 5 and V4 Flash 0731 should have 48 product lines');
+assert.equal(configuredProductLines.length, 49, 'Curated inventory should include Muse Spark 1.2 as its own product line');
 assert.ok(
   configuredProductLines.every((line) => line.rankingClass === 'formal_text_agent'),
   'Image/audio/safety-only product lines must not enter the Data.md capability scope',

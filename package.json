@@ -20,6 +20,7 @@
     "audit:profile-matches": "esbuild scripts/sourceProfileMatchAudit.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-source-profile-match-audit.mjs && node /tmp/llmpk-source-profile-match-audit.mjs",
     "audit:config-coverage": "esbuild scripts/configurationCoverageAudit.ts --bundle --platform=node --format=esm --outfile=/tmp/llmpk-configuration-coverage-audit.mjs && node /tmp/llmpk-configuration-coverage-audit.mjs",
     "refresh:source-snapshots": "node scripts/refreshSourceSnapshots.mjs",
+    "rebuild:source-catalog": "OPENROUTER_MODELS_SNAPSHOT_PATH=src/data/openRouterCatalogSnapshot.json node scripts_build_all_3_sources_catalog.js",
     "refresh:artificial-analysis": "node scripts/fetchArtificialAnalysisSnapshot.mjs",
     "refresh:arena": "node scripts/fetchArenaSnapshots.mjs",
     "refresh:openrouter-catalog": "node scripts/fetchOpenRouterCatalogSnapshot.mjs",

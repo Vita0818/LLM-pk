@@ -72,6 +72,7 @@ export interface BuiltInConfigurationIdentity extends ConfigurationIdentity {
 
 export type BuiltInConfigurationPresetOrigin =
   | 'data-md'
+  | 'source-backed'
   | 'opus-5-source-backed'
   | 'source-catalog';
 
@@ -547,6 +548,7 @@ function apiProfilePresets(input: {
   environment?: string;
   sharedExactCardIds?: readonly string[];
   note?: string;
+  origin?: BuiltInConfigurationPresetOrigin;
   identityForProfile?: (profile: string) => BuiltInConfigurationIdentity;
 }): BuiltInConfigurationPreset[] {
   return input.profileKeys.map((profileKey) => {
@@ -577,7 +579,7 @@ function apiProfilePresets(input: {
       key: `${input.keyPrefix}.${profileKey}${input.keySuffix || ''}`,
       productLineId: input.productLineId,
       identity,
-      origin: 'data-md',
+      origin: input.origin ?? 'data-md',
       access: 'api',
       ...(note ? { note } : {}),
       sourceCardIds: uniqueCardIds(plan.exactCardIds, input.sharedExactCardIds),
@@ -1253,6 +1255,24 @@ const DATA_MD_CONFIGURATION_PRESETS: readonly BuiltInConfigurationPreset[] = [
   ...API_PROFILE_EXPANSION_PRESETS,
   ...API_ROUTE_EXPANSION_PRESETS,
 ];
+
+/**
+ * Muse Spark 1.2 is a newly source-backed Meta API model rather than a Data.md
+ * row. OpenRouter publishes five supported reasoning efforts; Artificial
+ * Analysis currently provides independent capability evidence for XHigh only.
+ */
+const MUSE_SPARK_1_2_CONFIGURATION_PRESETS: readonly BuiltInConfigurationPreset[] =
+  apiProfilePresets({
+    keyPrefix: 'muse-spark-1-2',
+    productLineId: 'muse_spark_12',
+    modelName: 'Muse Spark 1.2',
+    profileKeys: ['minimal', 'low', 'medium', 'high', 'xhigh'],
+    providerName: 'Meta',
+    upstreamApi: 'Meta API',
+    sharedExactCardIds: ['card-openrouter-meta-muse-spark-1-2'],
+    origin: 'source-backed',
+    note: 'OpenRouter 官方目录确认 Minimal、Low、Medium、High、XHigh；当前只有 Artificial Analysis 的 XHigh 具备正式能力观测，其他档位不借用高档数据。',
+  });
 
 /**
  * Claude Opus 5 is one API model with source-published effort profiles.
@@ -2731,6 +2751,7 @@ function attachProviderNeutralOpenRouterPracticalCards(
 
 const BASE_HAND_AUTHORED_CONFIGURATION_PRESETS: readonly BuiltInConfigurationPreset[] = [
   ...DATA_MD_CONFIGURATION_PRESETS,
+  ...MUSE_SPARK_1_2_CONFIGURATION_PRESETS,
   ...CLAUDE_OPUS_5_CONFIGURATION_PRESETS,
   ...HARNESS_CONFIGURATION_PRESETS,
 ];
@@ -2828,7 +2849,7 @@ interface SubscriptionConfigurationTarget {
 }
 
 const BASE_PLAN_TO_20X_QUOTA_DIVISOR = 20;
-const CHATGPT_PRO_20X_API_EQUIVALENT_USD = 2500;
+const CHATGPT_PRO_20X_API_EQUIVALENT_USD = 4500;
 const CLAUDE_MAX_20X_API_EQUIVALENT_USD = 1600;
 const GOOGLE_AI_ULTRA_20X_API_EQUIVALENT_USD = 5200;
 
@@ -2838,7 +2859,7 @@ const CHATGPT_PLUS_PLAN: SubscriptionPlanDefinition = {
   monthlyPriceUSD: 20,
   apiEquivalentCostUSD:
     CHATGPT_PRO_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
-  note: '20 美元档按同一订阅族的 20× 比例折合 125 美元 API 用量；100 美元 5× 档成本效率相同，因此不重复建盒。',
+  note: '20 美元档按同一订阅族的 20× 比例折合 225 美元 API 用量；100 美元 5× 档成本效率相同，因此不重复建盒。',
 };
 
 const CHATGPT_PRO_20X_PLAN: SubscriptionPlanDefinition = {
@@ -2846,7 +2867,7 @@ const CHATGPT_PRO_20X_PLAN: SubscriptionPlanDefinition = {
   planName: 'ChatGPT Pro 20×',
   monthlyPriceUSD: 200,
   apiEquivalentCostUSD: CHATGPT_PRO_20X_API_EQUIVALENT_USD,
-  note: '200 美元档按社区实测的近似量级取整为 2500 美元 API 等价值。',
+  note: '200 美元档按已确认口径取 4500 美元 API 等价值。',
 };
 
 const CLAUDE_PRO_PLAN: SubscriptionPlanDefinition = {
@@ -3540,6 +3561,7 @@ function curateReaderFacingPresets(
 
   const originRank: Record<BuiltInConfigurationPresetOrigin, number> = {
     'data-md': 3,
+    'source-backed': 2,
     'opus-5-source-backed': 2,
     'source-catalog': 1,
   };
@@ -3716,4 +3738,4 @@ export const BUILT_IN_CONFIGURATION_PRESET_COUNT = BUILT_IN_CONFIGURATION_PRESET
  * additions visible during Vite hot updates as well as after a full reload.
  */
 export const BUILT_IN_CONFIGURATION_PRESET_INVENTORY_VERSION =
-  '2026-08-04-deepseek-v4-flash-0731-normal-source-v33';
+  '2026-08-06-muse-spark-1-2-source-backed-v34';

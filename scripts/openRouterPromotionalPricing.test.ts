@@ -56,13 +56,13 @@ assert.equal(terraApi.config.openRouterData?.outputPricePerMToken, 6);
 assert.equal(terraApi.practicalBreakdown.effectiveScenarioCostUSD, 2.5);
 assert.equal(
   terraSubscription.config.subscriptionData?.apiEquivalentCostUSD,
-  125,
+  225,
 );
 assert.equal(terraSubscription.config.openRouterData?.inputPricePerMToken, 1);
 assert.equal(terraSubscription.config.openRouterData?.outputPricePerMToken, 6);
 assert.equal(
   terraSubscription.practicalBreakdown.effectiveScenarioCostUSD,
-  0.4,
+  2 / 9,
 );
 
 const lunaApi = requireScore('GPT-5.6 Luna Max | Codex CLI | OpenAI API');
@@ -74,15 +74,15 @@ assert.equal(lunaApi.config.openRouterData?.outputPricePerMToken, 0.6);
 assert.equal(lunaApi.practicalBreakdown.effectiveScenarioCostUSD, 0.25);
 assert.equal(
   lunaSubscription.config.subscriptionData?.apiEquivalentCostUSD,
-  125,
+  225,
 );
 assert.equal(lunaSubscription.config.openRouterData?.inputPricePerMToken, 0.1);
 assert.equal(lunaSubscription.config.openRouterData?.outputPricePerMToken, 0.6);
 assert.equal(
   lunaSubscription.practicalBreakdown.effectiveScenarioCostUSD,
-  0.04,
+  1 / 45,
 );
 
 console.log(
-  'OpenRouter Terra/Luna promotional pricing and unchanged subscription value: PASS',
+  'OpenRouter Terra/Luna promotional pricing and ChatGPT subscription value: PASS',
 );

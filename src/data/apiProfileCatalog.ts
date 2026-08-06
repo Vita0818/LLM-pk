@@ -267,6 +267,16 @@ export const API_PROFILE_FAMILIES: readonly ApiProfileFamilyEvidence[] = [
     ],
   },
   {
+    productLineId: 'muse_spark_12',
+    tiers: [
+      tier('minimal', 'Minimal', 0),
+      tier('low', 'Low', 1),
+      tier('medium', 'Medium', 2),
+      tier('high', 'High', 3),
+      tier('xhigh', 'XHigh', 4, ['card-aa-muse-spark-1-2']),
+    ],
+  },
+  {
     productLineId: 'muse_spark_11',
     tiers: [
       tier('minimal', 'Minimal', 0),
