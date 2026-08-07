@@ -1054,14 +1054,14 @@ const expectedSubscriptionPlans = [
     key: 'chatgpt-plus',
     providerLabel: 'ChatGPT Plus',
     monthlyPriceUSD: 20,
-    apiEquivalentCostUSD: 225,
+    apiEquivalentCostUSD: 250,
     targets: chatGptPlusTargets,
   },
   {
     key: 'chatgpt-pro-20x',
     providerLabel: 'ChatGPT Pro 20×',
     monthlyPriceUSD: 200,
-    apiEquivalentCostUSD: 4500,
+    apiEquivalentCostUSD: 5000,
     targets: chatGptPlusTargets.slice(0, 1),
   },
   {
@@ -1279,12 +1279,53 @@ assert.equal(
   deepSeek0731Config.observations.arena_code_webdev?.rawValue,
   1576.5384851960803,
 );
-assert.deepEqual(deepSeek0731Config.openRouterData, {
-  inputPricePerMToken: 0.1407142857142857,
-  outputPricePerMToken: 0.28952380952380946,
-  ttftP50Seconds: 1.1805238095238095,
-  throughputP50TokensPerSec: 55.523809523809526,
-});
+function expectedOpenRouterDataFromVerifiedCards(
+  ...cardIds: string[]
+) {
+  const observations = cardIds.flatMap((cardId) => (
+    reconciledV3Store.getCardObservations(cardId)
+  ));
+  const requireRawValue = (metricId: string) => {
+    const observation = observations.find((candidate) => candidate.metricId === metricId);
+    assert.ok(observation, `Missing verified ${metricId} observation.`);
+    return observation.rawValue;
+  };
+  return {
+    inputPricePerMToken: requireRawValue('or_price_input'),
+    outputPricePerMToken: requireRawValue('or_price_output'),
+    ttftP50Seconds: requireRawValue('or_ttft_p50'),
+    throughputP50TokensPerSec: requireRawValue('or_throughput_p50'),
+  };
+}
+
+function assertOpenRouterDataIsBackedByLinkedCards(
+  box: ConfigurationBox,
+  openRouterData: NonNullable<ReturnType<typeof reconciledV3Store.buildLLMConfiguration>['openRouterData']>,
+) {
+  const observations = reconciledV3Store.getLinkedCardStack(box.id)
+    .flatMap(({ card }) => reconciledV3Store.getCardObservations(card.id));
+  for (const [metricId, value] of [
+    ['or_price_input', openRouterData.inputPricePerMToken],
+    ['or_price_output', openRouterData.outputPricePerMToken],
+    ['or_ttft_p50', openRouterData.ttftP50Seconds],
+    ['or_throughput_p50', openRouterData.throughputP50TokensPerSec],
+  ] as const) {
+    assert.ok(
+      observations.some((observation) => (
+        observation.metricId === metricId
+        && Math.abs(observation.rawValue - value) < 1e-12
+      )),
+      `${box.builtInPresetId} ${metricId} must equal a linked verified observation.`,
+    );
+  }
+}
+assert.deepEqual(
+  deepSeek0731Config.openRouterData,
+  expectedOpenRouterDataFromVerifiedCards(
+    'card-openrouter-deepseek-deepseek-v4-flash-0731',
+    'card-openrouter-standard-performance-deepseek-deepseek-v4-flash-0731',
+  ),
+);
 const deepSeek0731Score = scoreByConfigurationId.get(deepSeek0731Box.id);
 assert.equal(deepSeek0731Score?.availableDomainCount, 5);
 assert.equal(deepSeek0731Score?.eligibleForGlobalLeaderboard, true);
@@ -1308,12 +1349,13 @@ assert.equal(
   false,
   'Muse Spark 1.2 must preserve missing Arena evidence instead of inferring it.',
 );
-assert.deepEqual(museSpark12Config.openRouterData, {
-  inputPricePerMToken: 1.25,
-  outputPricePerMToken: 4.25,
-  ttftP50Seconds: 5.3395,
-  throughputP50TokensPerSec: 101,
-});
+assert.deepEqual(
+  museSpark12Config.openRouterData,
+  expectedOpenRouterDataFromVerifiedCards(
+    'card-openrouter-meta-muse-spark-1-2',
+    'card-openrouter-standard-performance-meta-muse-spark-1-2',
+  ),
+);
 const museSpark12Score = scoreByConfigurationId.get(museSpark12Box.id);
 assert.equal(museSpark12Score?.availableDomainCount, 5);
 assert.notEqual(museSpark12Score?.rawCapabilityScore, null);
@@ -1513,55 +1555,16 @@ for (const [presetId, expectedAuthorProvider] of [
   );
 }
 
-for (const [
-  presetId,
-  expectedInputPrice,
-  expectedOutputPrice,
-  expectedTtftSeconds,
-  expectedThroughput,
-] of [
-  [
-    'builtin.source-catalog.source-profile-grok-4-3-high.grok-4-3-high',
-    1.25,
-    2.5,
-    0.67375,
-    87.5,
-  ],
-  [
-    'builtin.agent.arena.grok-build-0-1.max',
-    1,
-    2,
-    0.6775,
-    123.5,
-  ],
-  [
-    'builtin.source-catalog.source-profile-inkling-xhigh.inkling-xhigh',
-    0.9833333333333332,
-    4.05,
-    0.6008333333333333,
-    127,
-  ],
+for (const presetId of [
+  'builtin.source-catalog.source-profile-grok-4-3-high.grok-4-3-high',
+  'builtin.agent.arena.grok-build-0-1.max',
+  'builtin.source-catalog.source-profile-inkling-xhigh.inkling-xhigh',
 ] as const) {
   const box = installedPresetBoxes.find((candidate) => candidate.builtInPresetId === presetId);
   assert.ok(box, `Practical-source repair preset ${presetId} must be installed.`);
   const configuration = reconciledV3Store.buildLLMConfiguration(box);
   assert.ok(configuration.openRouterData, `${presetId} must have complete practical data.`);
-  assert.ok(
-    Math.abs(configuration.openRouterData.inputPricePerMToken - expectedInputPrice) < 1e-9,
-    `${presetId} input price changed to ${configuration.openRouterData.inputPricePerMToken}.`,
-  );
-  assert.ok(
-    Math.abs(configuration.openRouterData.outputPricePerMToken - expectedOutputPrice) < 1e-9,
-    `${presetId} output price changed to ${configuration.openRouterData.outputPricePerMToken}.`,
-  );
-  assert.ok(
-    Math.abs(configuration.openRouterData.ttftP50Seconds - expectedTtftSeconds) < 1e-9,
-    `${presetId} TTFT changed to ${configuration.openRouterData.ttftP50Seconds}.`,
-  );
-  assert.ok(
-    Math.abs(configuration.openRouterData.throughputP50TokensPerSec - expectedThroughput) < 1e-9,
-    `${presetId} throughput changed to ${configuration.openRouterData.throughputP50TokensPerSec}.`,
-  );
+  assertOpenRouterDataIsBackedByLinkedCards(box, configuration.openRouterData);
 }
 
 const firstInstalledPreset = installedPresetBoxes[0];

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "source-snapshot-validation-report/v1",
-  "validatedAt": "2026-08-06T05:44:44.300Z",
+  "validatedAt": "2026-08-07T14:23:02.657Z",
   "status": "PASS",
   "inputs": {
     "artificialAnalysis": "src/data/artificialAnalysisSourceSnapshot.json",
@@ -9,8 +9,8 @@
     "openRouterPerformance": "src/data/openRouterPerformanceSnapshot.json"
   },
   "summary": {
-    "checks": 26,
-    "passed": 26,
+    "checks": 27,
+    "passed": 27,
     "failed": 0
   },
   "coverage": {
@@ -96,25 +96,39 @@
     },
     "openRouterPerformance": {
       "queriedModels": 309,
-      "modelsWithPerformance": 296,
-      "endpointRecords": 916,
-      "modelAggregates": 296,
-      "modelsWithSingleEndpoint": 149,
-      "modelsWithMultipleEndpoints": 147,
+      "modelsWithPerformance": 294,
+      "endpointRecords": 928,
+      "modelAggregates": 294,
+      "modelsWithSingleEndpoint": 145,
+      "modelsWithMultipleEndpoints": 149,
       "unavailableModels": 7,
-      "noStatisticsModels": 6,
+      "noStatisticsModels": 8,
       "failedModels": 0,
+      "historyRequestsAttempted": 1176,
+      "historyRequestsSucceeded": 1176,
+      "historyRequestsFailed": 0,
       "returnedEndpointRows": 977,
-      "acceptedEndpointRows": 916,
-      "rejectedEndpointRows": 61,
-      "rejectedMissingLatency": 61,
-      "rejectedMissingThroughput": 61,
-      "rejectedMissingOrZeroRequestCount": 61,
+      "acceptedEndpointRows": 928,
+      "rejectedEndpointRows": 49,
+      "rejectedMissingLatency": 49,
+      "rejectedMissingThroughput": 49,
+      "rejectedMissingOrZeroRequestCount": 49,
+      "stabilizedMeasureValues": 1856,
+      "historyBackedMeasureValues": 1846,
+      "currentWindowFallbackMeasureValues": 10,
+      "historyBackedMeasureCoverage": 0.9946120689655172,
+      "endpointRecordsWithBothMeasuresHistoryBacked": 923,
+      "stabilizationSources": {
+        "threeDayPlusOneWeek": 1712,
+        "threeDayOnly": 22,
+        "oneWeekOnly": 112,
+        "currentWindowFallback": 10
+      },
       "aggregateCoverage": {
-        "modelAggregates": 296,
-        "singleEndpointModels": 149,
-        "multipleEndpointModels": 147,
-        "fourMeasureCompleteModels": 296
+        "modelAggregates": 294,
+        "singleEndpointModels": 145,
+        "multipleEndpointModels": 149,
+        "fourMeasureCompleteModels": 294
       }
     }
   },
@@ -417,7 +431,7 @@
       "description": "OpenRouter performance snapshot uses the expected schema.",
       "passed": true,
       "details": {
-        "schemaVersion": "openrouter-performance-snapshot/v1"
+        "schemaVersion": "openrouter-performance-snapshot/v2"
       }
     },
     {
@@ -425,7 +439,7 @@
       "description": "OpenRouter performance snapshot was fetched recently.",
       "passed": true,
       "details": {
-        "fetchedAt": "2026-08-06T05:35:45.467Z"
+        "fetchedAt": "2026-08-07T14:19:51.633Z"
       }
     },
     {
@@ -433,9 +447,10 @@
       "description": "OpenRouter performance refresh had no transient request failures.",
       "passed": true,
       "details": {
-        "endpointRecords": 916,
+        "endpointRecords": 928,
         "failedModels": 0,
-        "modelsWithPerformance": 296
+        "failedHistoryRequests": 0,
+        "modelsWithPerformance": 294
       }
     },
     {
@@ -443,7 +458,20 @@
       "description": "Every retained Standard endpoint has finite p50 latency, throughput and request count.",
       "passed": true,
       "details": {
-        "endpointRecords": 916
+        "endpointRecords": 928
+      }
+    },
+    {
+      "id": "openrouter-speed-stabilization",
+      "description": "OpenRouter speed values use auditable 3d/1w endpoint histories with bounded fallback.",
+      "passed": true,
+      "details": {
+        "algorithmVersion": "openrouter-endpoint-history-median-geomean/v1",
+        "historyBackedMeasureCoverage": 0.9946120689655172,
+        "historyBackedMeasureValues": 1846,
+        "currentWindowFallbackMeasureValues": 10,
+        "historyRequestsAttempted": 1176,
+        "historyRequestsFailed": 0
       }
     },
     {
@@ -451,16 +479,18 @@
       "description": "Every model with performance has provider-neutral price, TTFT, and output-speed summaries.",
       "passed": true,
       "details": {
-        "modelAggregates": 296,
-        "modelsWithPerformance": 296,
+        "modelAggregates": 294,
+        "modelsWithPerformance": 294,
         "requiredMeasures": [
           "inputPricePerToken",
           "outputPricePerToken",
           "timeToFirstTokenMilliseconds",
-          "outputSpeedTokensPerSecond"
+          "outputSpeedTokensPerSecond",
+          "instantaneousTimeToFirstTokenMilliseconds",
+          "instantaneousOutputSpeedTokensPerSecond"
         ],
-        "singleEndpointModels": 149,
-        "multipleEndpointModels": 147
+        "singleEndpointModels": 145,
+        "multipleEndpointModels": 149
       }
     },
     {
@@ -469,11 +499,11 @@
       "passed": true,
       "details": {
         "returned": 977,
-        "accepted": 916,
-        "rejected": 61,
-        "rejectedMissingLatency": 61,
-        "rejectedMissingThroughput": 61,
-        "rejectedMissingOrZeroRequestCount": 61
+        "accepted": 928,
+        "rejected": 49,
+        "rejectedMissingLatency": 49,
+        "rejectedMissingThroughput": 49,
+        "rejectedMissingOrZeroRequestCount": 49
       }
     }
   ]

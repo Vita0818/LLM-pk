@@ -105,7 +105,10 @@ const snapshot: PublicLeaderboardSnapshot = {
   scores,
 };
 
-const outputPath = resolve(process.cwd(), 'src/data/publicLeaderboardSnapshot.json');
+const outputPath = resolve(
+  process.env.PUBLIC_LEADERBOARD_SNAPSHOT_OUTPUT
+    ?? 'src/data/publicLeaderboardSnapshot.json',
+);
 
 writeFileSync(outputPath, `${JSON.stringify(snapshot)}\n`, 'utf8');
 console.log(`Generated public leaderboard snapshot with ${scores.length} configurations.`);

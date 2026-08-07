@@ -3,19 +3,29 @@
  *
  * The general `/api/v1/models` catalog publishes model identity and list
  * prices. The model page separately calls `/api/frontend/v1/stats/endpoint`
- * for provider-endpoint p50 latency/throughput and endpoint prices. This
- * script preserves every accepted raw row, then also publishes provider-
- * neutral per-model summaries (arithmetic mean, request-weighted mean,
- * median, quartiles, and range). Flex/Priority service tiers are never mixed
- * into the ordinary Standard route.
+ * for provider-endpoint p50 latency/throughput and endpoint prices. Its
+ * performance charts separately expose 3-day hourly and 1-week daily
+ * histories. This script preserves every accepted current row, stabilizes
+ * each endpoint with those two histories, then publishes provider-neutral
+ * per-model summaries. Flex/Priority service tiers are never mixed into the
+ * ordinary Standard route.
  *
  * Usage:
  *   OPENROUTER_MODELS_SNAPSHOT_PATH=/path/to/models.json \
+ *     node scripts/fetchOpenRouterPerformanceSnapshot.mjs
+ *
+ * Optional diagnostic subset:
+ *   OPENROUTER_MODEL_IDS=openai/gpt-5.4,anthropic/claude-opus-4.1 \
  *     node scripts/fetchOpenRouterPerformanceSnapshot.mjs
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  OPENROUTER_SPEED_STABILIZATION_POLICY,
+  OPENROUTER_SPEED_STABILIZATION_VERSION,
+  stabilizeOpenRouterEndpointMetric,
+} from './openRouterSpeedStabilization.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUTPUT_PATH = path.resolve(
@@ -24,8 +34,41 @@ const OUTPUT_PATH = path.resolve(
 );
 const MODEL_CATALOG_URL = 'https://openrouter.ai/api/v1/models';
 const STATS_ENDPOINT_URL = 'https://openrouter.ai/api/frontend/v1/stats/endpoint';
+const LATENCY_HISTORY_URL = 'https://openrouter.ai/api/frontend/v1/stats/latency-comparison';
+const THROUGHPUT_HISTORY_URL = 'https://openrouter.ai/api/frontend/v1/stats/throughput-comparison';
 const CONCURRENCY = Math.max(1, Math.min(12, Number(process.env.OPENROUTER_FETCH_CONCURRENCY) || 4));
+const HISTORY_CONCURRENCY = Math.max(
+  1,
+  Math.min(12, Number(process.env.OPENROUTER_HISTORY_FETCH_CONCURRENCY) || 6),
+);
 const MAX_ATTEMPTS = 5;
+
+const HISTORY_SERIES = [
+  {
+    metricName: 'latencyMilliseconds',
+    windowName: 'threeDay',
+    endpointUrl: LATENCY_HISTORY_URL,
+    timeRange: '3d',
+  },
+  {
+    metricName: 'latencyMilliseconds',
+    windowName: 'oneWeek',
+    endpointUrl: LATENCY_HISTORY_URL,
+    timeRange: '1w',
+  },
+  {
+    metricName: 'throughputTokensPerSecond',
+    windowName: 'threeDay',
+    endpointUrl: THROUGHPUT_HISTORY_URL,
+    timeRange: '3d',
+  },
+  {
+    metricName: 'throughputTokensPerSecond',
+    windowName: 'oneWeek',
+    endpointUrl: THROUGHPUT_HISTORY_URL,
+    timeRange: '1w',
+  },
+];
 
 function asFiniteNumber(value) {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -109,13 +152,17 @@ async function loadModelCatalog() {
 
 function compactStatsRow(model, endpoint, sourceUrl, sourceOrder) {
   const stats = endpoint?.stats;
+  const endpointId = typeof endpoint?.id === 'string' ? endpoint.id.trim() : '';
   const p50LatencyMilliseconds = asFiniteNumber(stats?.p50_latency);
   const p50ThroughputTokensPerSecond = asFiniteNumber(stats?.p50_throughput);
   const requestCount = asFiniteNumber(stats?.request_count);
   const windowMinutes = asFiniteNumber(stats?.window_minutes);
   if (
-    p50LatencyMilliseconds === null
+    endpointId.length === 0
+    || p50LatencyMilliseconds === null
+    || p50LatencyMilliseconds <= 0
     || p50ThroughputTokensPerSecond === null
+    || p50ThroughputTokensPerSecond <= 0
     || requestCount === null
     || requestCount <= 0
   ) {
@@ -128,7 +175,7 @@ function compactStatsRow(model, endpoint, sourceUrl, sourceOrder) {
     exactModelName: model.name || model.id,
     variant: endpoint.variant || 'standard',
     sourceOrder,
-    endpointId: endpoint.id,
+    endpointId,
     endpointName: endpoint.name || null,
     providerName: endpoint.provider_name || null,
     providerDisplayName: endpoint.provider_display_name || endpoint.provider_name || null,
@@ -233,6 +280,97 @@ function summarizeEndpointMeasure(records, selector) {
   };
 }
 
+function buildHistoryUrl(model, series) {
+  const searchParams = new URLSearchParams({
+    permaslug: model.canonical_slug,
+    timeRange: series.timeRange,
+    variant: 'standard',
+  });
+  return `${series.endpointUrl}?${searchParams.toString()}`;
+}
+
+function createModelHistoryState(model) {
+  return {
+    modelId: model.id,
+    payloads: {
+      latencyMilliseconds: { threeDay: null, oneWeek: null },
+      throughputTokensPerSecond: { threeDay: null, oneWeek: null },
+    },
+    sourceUrls: [],
+  };
+}
+
+function applyHistoryStabilization(records, historiesByModelId, now) {
+  for (const record of records) {
+    const history = historiesByModelId.get(record.modelId);
+    const latency = stabilizeOpenRouterEndpointMetric({
+      currentValue: record.stats.p50LatencyMilliseconds,
+      endpointId: record.endpointId,
+      threeDayPayload: history?.payloads?.latencyMilliseconds?.threeDay,
+      oneWeekPayload: history?.payloads?.latencyMilliseconds?.oneWeek,
+      now,
+    });
+    const throughput = stabilizeOpenRouterEndpointMetric({
+      currentValue: record.stats.p50ThroughputTokensPerSecond,
+      endpointId: record.endpointId,
+      threeDayPayload: history?.payloads?.throughputTokensPerSecond?.threeDay,
+      oneWeekPayload: history?.payloads?.throughputTokensPerSecond?.oneWeek,
+      now,
+    });
+    record.stats.stabilizedP50LatencyMilliseconds = latency.value;
+    record.stats.stabilizedP50ThroughputTokensPerSecond = throughput.value;
+    record.stats.speedStabilization = {
+      algorithmVersion: OPENROUTER_SPEED_STABILIZATION_VERSION,
+      latencyMilliseconds: latency,
+      throughputTokensPerSecond: throughput,
+    };
+    record.historySourceUrls = [...new Set(history?.sourceUrls || [])].sort();
+    record.sourceFields.stabilizedP50LatencyMilliseconds =
+      '3d/1w latency-comparison data[].y[endpointId::default], with current p50 fallback';
+    record.sourceFields.stabilizedP50ThroughputTokensPerSecond =
+      '3d/1w throughput-comparison data[].y[endpointId::default], with current p50 fallback';
+  }
+}
+
+function summarizeStabilizationCounts(records) {
+  const results = records.flatMap((record) => [
+    record.stats?.speedStabilization?.latencyMilliseconds,
+    record.stats?.speedStabilization?.throughputTokensPerSecond,
+  ]).filter(Boolean);
+  const sources = {
+    threeDayPlusOneWeek: 0,
+    threeDayOnly: 0,
+    oneWeekOnly: 0,
+    currentWindowFallback: 0,
+  };
+  for (const result of results) {
+    if (result.source === 'three-day-plus-one-week-history') {
+      sources.threeDayPlusOneWeek += 1;
+    } else if (result.source === 'three-day-history') {
+      sources.threeDayOnly += 1;
+    } else if (result.source === 'one-week-history') {
+      sources.oneWeekOnly += 1;
+    } else if (result.source === 'current-window-fallback') {
+      sources.currentWindowFallback += 1;
+    }
+  }
+  const historyBackedMeasureValues = results.length - sources.currentWindowFallback;
+  return {
+    stabilizedMeasureValues: results.length,
+    historyBackedMeasureValues,
+    currentWindowFallbackMeasureValues: sources.currentWindowFallback,
+    historyBackedMeasureCoverage: results.length > 0
+      ? historyBackedMeasureValues / results.length
+      : 0,
+    endpointRecordsWithBothMeasuresHistoryBacked: records.filter((record) => (
+      record.stats.speedStabilization.latencyMilliseconds.source !== 'current-window-fallback'
+      && record.stats.speedStabilization.throughputTokensPerSecond.source
+        !== 'current-window-fallback'
+    )).length,
+    stabilizationSources: sources,
+  };
+}
+
 function buildModelAggregates(records) {
   const recordsByModelId = new Map();
   for (const record of records) {
@@ -271,9 +409,17 @@ function buildModelAggregates(records) {
         ),
         timeToFirstTokenMilliseconds: summarizeEndpointMeasure(
           modelRecords,
-          (record) => record.stats?.p50LatencyMilliseconds,
+          (record) => record.stats?.stabilizedP50LatencyMilliseconds,
         ),
         outputSpeedTokensPerSecond: summarizeEndpointMeasure(
+          modelRecords,
+          (record) => record.stats?.stabilizedP50ThroughputTokensPerSecond,
+        ),
+        instantaneousTimeToFirstTokenMilliseconds: summarizeEndpointMeasure(
+          modelRecords,
+          (record) => record.stats?.p50LatencyMilliseconds,
+        ),
+        instantaneousOutputSpeedTokensPerSecond: summarizeEndpointMeasure(
           modelRecords,
           (record) => record.stats?.p50ThroughputTokensPerSecond,
         ),
@@ -282,13 +428,16 @@ function buildModelAggregates(records) {
       providerSlugs: [...providers].sort(),
       sourcePageUrl: first.sourcePageUrl,
       sourceUrls: [...new Set(modelRecords.map((record) => record.sourceUrl))].sort(),
+      historySourceUrls: [...new Set(
+        modelRecords.flatMap((record) => record.historySourceUrls || []),
+      )].sort(),
     };
   }).sort((left, right) => left.modelId.localeCompare(right.modelId, 'en-US'));
 }
 
 async function main() {
   const { payload, inputMode, inputPath } = await loadModelCatalog();
-  const models = (Array.isArray(payload?.data) ? payload.data : [])
+  const allModels = (Array.isArray(payload?.data) ? payload.data : [])
     .filter((model) => (
       typeof model?.id === 'string'
       && typeof model?.canonical_slug === 'string'
@@ -296,12 +445,29 @@ async function main() {
       && isGeneralTextModel(model)
     ))
     .sort((left, right) => left.id.localeCompare(right.id, 'en-US'));
+  const requestedModelIds = new Set(
+    String(process.env.OPENROUTER_MODEL_IDS || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean),
+  );
+  const models = requestedModelIds.size > 0
+    ? allModels.filter((model) => requestedModelIds.has(model.id))
+    : allModels;
+  const missingRequestedModelIds = [...requestedModelIds]
+    .filter((modelId) => !allModels.some((model) => model.id === modelId));
+  if (missingRequestedModelIds.length > 0) {
+    throw new Error(
+      `OPENROUTER_MODEL_IDS contains unavailable or ineligible IDs: ${missingRequestedModelIds.join(', ')}`,
+    );
+  }
   if (models.length === 0) {
     throw new Error('OpenRouter model catalog contained no eligible text-model records.');
   }
 
   const records = [];
   const failures = [];
+  const historyFailures = [];
   const unavailableModels = [];
   const noStatisticsModels = [];
   const endpointDiagnostics = {
@@ -336,10 +502,12 @@ async function main() {
             endpointDiagnostics.acceptedEndpointRows += 1;
           } else {
             endpointDiagnostics.rejectedEndpointRows += 1;
-            if (asFiniteNumber(endpoint?.stats?.p50_latency) === null) {
+            const latency = asFiniteNumber(endpoint?.stats?.p50_latency);
+            if (latency === null || latency <= 0) {
               endpointDiagnostics.rejectedMissingLatency += 1;
             }
-            if (asFiniteNumber(endpoint?.stats?.p50_throughput) === null) {
+            const throughput = asFiniteNumber(endpoint?.stats?.p50_throughput);
+            if (throughput === null || throughput <= 0) {
               endpointDiagnostics.rejectedMissingThroughput += 1;
             }
             const requestCount = asFiniteNumber(endpoint?.stats?.request_count);
@@ -387,26 +555,106 @@ async function main() {
     throw new Error(`OpenRouter performance refresh failed for ${failures.length}/${models.length} models; refusing to replace the verified snapshot.`);
   }
 
+  const historiesByModelId = new Map();
+  const historyTasks = [];
+  for (const model of models) {
+    if (!successfulModelIds.has(model.id)) continue;
+    historiesByModelId.set(model.id, createModelHistoryState(model));
+    for (const series of HISTORY_SERIES) {
+      historyTasks.push({ model, series, sourceUrl: buildHistoryUrl(model, series) });
+    }
+  }
+
+  let historyCursor = 0;
+  let historyRequestsSucceeded = 0;
+  async function historyWorker() {
+    while (historyCursor < historyTasks.length) {
+      const task = historyTasks[historyCursor];
+      historyCursor += 1;
+      try {
+        const response = await fetchJson(task.sourceUrl);
+        const state = historiesByModelId.get(task.model.id);
+        state.payloads[task.series.metricName][task.series.windowName] = response;
+        state.sourceUrls.push(task.sourceUrl);
+        historyRequestsSucceeded += 1;
+      } catch (error) {
+        historyFailures.push({
+          modelId: task.model.id,
+          canonicalSlug: task.model.canonical_slug,
+          metricName: task.series.metricName,
+          windowName: task.series.windowName,
+          sourceUrl: task.sourceUrl,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+  await Promise.all(
+    Array.from({ length: HISTORY_CONCURRENCY }, () => historyWorker()),
+  );
+  historyFailures.sort((left, right) => (
+    left.modelId.localeCompare(right.modelId, 'en-US')
+    || left.metricName.localeCompare(right.metricName, 'en-US')
+    || left.windowName.localeCompare(right.windowName, 'en-US')
+  ));
+  if (historyFailures.length > 0) {
+    throw new Error(
+      `OpenRouter history refresh failed for ${historyFailures.length}/${historyTasks.length} requests; refusing to replace the verified snapshot.`,
+    );
+  }
+
+  const stabilizationReferenceTime = new Date();
+  applyHistoryStabilization(records, historiesByModelId, stabilizationReferenceTime);
+  const stabilizationCounts = summarizeStabilizationCounts(records);
   const modelAggregates = buildModelAggregates(records);
   const snapshot = {
-    schemaVersion: 'openrouter-performance-snapshot/v1',
-    fetchedAt: new Date().toISOString(),
+    schemaVersion: 'openrouter-performance-snapshot/v2',
+    fetchedAt: stabilizationReferenceTime.toISOString(),
     source: {
       modelCatalogUrl: MODEL_CATALOG_URL,
       statsEndpointUrl: STATS_ENDPOINT_URL,
+      latencyHistoryUrl: LATENCY_HISTORY_URL,
+      throughputHistoryUrl: THROUGHPUT_HISTORY_URL,
       statsVariant: 'standard',
-      metricWindow: 'endpoint response stats.window_minutes (normally 30 minutes)',
+      currentMetricWindow: 'endpoint response stats.window_minutes (normally 30 minutes)',
+      historyMetricWindows: ['3d hourly curve', '1w daily curve'],
       inputMode,
       ...(inputPath ? { inputPath } : {}),
+      ...(requestedModelIds.size > 0
+        ? { requestedModelIds: [...requestedModelIds].sort() }
+        : {}),
     },
     selectionPolicy: {
       modelRecords: 'canonical general text-output records from /api/v1/models',
-      endpointRecords: 'every Standard-variant provider endpoint with finite p50 latency, finite p50 throughput, and request_count > 0',
+      endpointRecords: 'every Standard-variant provider endpoint with positive finite p50 latency, positive finite p50 throughput, and request_count > 0',
+      speedStabilization: {
+        algorithmVersion: OPENROUTER_SPEED_STABILIZATION_VERSION,
+        series: 'Only endpointUuid::default is retained; Flex and Priority series are excluded.',
+        completedBuckets: 'Discard the current incomplete UTC hour/day, then retain the latest 72 hourly and 7 daily buckets.',
+        windowStatistic: 'Median of positive observations in each endpoint/window; missing buckets are not zero-filled.',
+        combination: OPENROUTER_SPEED_STABILIZATION_POLICY.combination,
+        baseWeights: {
+          threeDay: OPENROUTER_SPEED_STABILIZATION_POLICY.windows.threeDay.baseWeight,
+          oneWeek: OPENROUTER_SPEED_STABILIZATION_POLICY.windows.oneWeek.baseWeight,
+        },
+        coverageAdjustment: 'Multiply each base weight by observed/expected completed-bucket coverage, then renormalize.',
+        minimumSamples: {
+          threeDayHourlyBuckets:
+            OPENROUTER_SPEED_STABILIZATION_POLICY.windows.threeDay.minimumSampleCount,
+          oneWeekDailyBuckets:
+            OPENROUTER_SPEED_STABILIZATION_POLICY.windows.oneWeek.minimumSampleCount,
+        },
+        plausibilityGuard: `Reject a history window if its median differs from the current endpoint value by more than ${OPENROUTER_SPEED_STABILIZATION_POLICY.plausibilityRatioLimit}x in either direction.`,
+        fallback: 'Use the current endpoint p50 only when neither history window is usable.',
+      },
       aggregation: {
         rawRecords: 'Every accepted endpoint remains a separate exact provider-route record.',
-        modelLevel: 'For each model, preserve arithmetic mean, request-count-weighted mean, median, p25, p75, minimum, and maximum across accepted Standard endpoints.',
+        endpointLevel: 'TTFT and throughput are stabilized separately for each current Standard endpoint before model aggregation.',
+        modelLevel: 'For each model, preserve arithmetic mean, current-request-count-weighted mean, median, p25, p75, minimum, and maximum across accepted Standard endpoints.',
         primaryMeanDefinition: 'Arithmetic mean gives every published Standard endpoint equal weight; requestWeightedMean is retained separately for traffic-weighted analysis.',
-        latencyCaveat: 'timeToFirstTokenMilliseconds summarizes provider endpoint p50_latency values; it is a mean/median of endpoint p50s, not a recomputed global request-level p50.',
+        instantaneousMeasures: 'The original current-window endpoint p50 aggregates remain under instantaneousTimeToFirstTokenMilliseconds and instantaneousOutputSpeedTokensPerSecond.',
+        requestWeightCaveat: 'requestWeightedMean uses each endpoint current-window request_count as an auxiliary weight, even for stabilized historical values.',
+        latencyCaveat: 'timeToFirstTokenMilliseconds summarizes stabilized provider endpoint p50 series; it is not a recomputed global request-level p50.',
       },
       excludedServiceTiers: ['flex', 'priority'],
     },
@@ -420,13 +668,18 @@ async function main() {
       unavailableModels: unavailableModels.length,
       noStatisticsModels: noStatisticsModels.length,
       failedModels: failures.length,
+      historyRequestsAttempted: historyTasks.length,
+      historyRequestsSucceeded,
+      historyRequestsFailed: historyFailures.length,
       ...endpointDiagnostics,
+      ...stabilizationCounts,
     },
     records,
     modelAggregates,
     unavailableModels,
     noStatisticsModels,
     failures,
+    historyFailures,
   };
   fs.writeFileSync(OUTPUT_PATH, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
   console.log(JSON.stringify({

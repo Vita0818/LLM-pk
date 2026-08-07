@@ -13,13 +13,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
-const OUTPUT_PATH = path.join(ROOT, 'src', 'data', 'seedCards.ts');
+const OUTPUT_PATH = path.resolve(
+  process.env.SOURCE_CATALOG_OUTPUT_PATH
+    ?? path.join(ROOT, 'src', 'data', 'seedCards.ts'),
+);
 const ARENA_RAW_PATH = path.join(ROOT, 'src', 'data', 'arenaRawExtraction.json');
 const OAGXM_SCOPE_PATH = path.join(ROOT, 'src', 'data', 'oagxmScope.json');
 const SOURCE_PROFILE_ALIASES_PATH = path.join(ROOT, 'src', 'data', 'sourceProfileAliases.json');
 const ARTIFICIAL_ANALYSIS_SOURCE_SNAPSHOT_PATH = path.join(ROOT, 'src', 'data', 'artificialAnalysisSourceSnapshot.json');
 const OPENROUTER_SUPPLEMENTAL_SNAPSHOT_PATH = path.join(ROOT, 'src', 'data', 'openRouterOfficialSupplementalSnapshot.json');
-const OPENROUTER_PERFORMANCE_SNAPSHOT_PATH = path.join(ROOT, 'src', 'data', 'openRouterPerformanceSnapshot.json');
+const OPENROUTER_PERFORMANCE_SNAPSHOT_PATH = path.resolve(
+  process.env.OPENROUTER_PERFORMANCE_SNAPSHOT_PATH
+    ?? path.join(ROOT, 'src', 'data', 'openRouterPerformanceSnapshot.json'),
+);
 const SNAPSHOT_DATE = new Date().toISOString().slice(0, 10);
 
 const AA_LEADERBOARD_URL = 'https://artificialanalysis.ai/leaderboards/models';
@@ -530,8 +536,12 @@ function loadOpenRouterSupplementalSnapshot() {
 function loadOpenRouterPerformanceSnapshot() {
   if (!fs.existsSync(OPENROUTER_PERFORMANCE_SNAPSHOT_PATH)) return [];
   const snapshot = JSON.parse(fs.readFileSync(OPENROUTER_PERFORMANCE_SNAPSHOT_PATH, 'utf8'));
+  const stabilizedSchema = snapshot?.schemaVersion === 'openrouter-performance-snapshot/v2';
   if (
-    snapshot?.schemaVersion !== 'openrouter-performance-snapshot/v1'
+    (
+      snapshot?.schemaVersion !== 'openrouter-performance-snapshot/v1'
+      && !stabilizedSchema
+    )
     || !Array.isArray(snapshot.records)
     || !Array.isArray(snapshot.failures)
   ) {
@@ -591,6 +601,12 @@ function loadOpenRouterPerformanceSnapshot() {
       outputPricePerToken: outputPrice,
       latencyMilliseconds,
       throughputTokensPerSecond,
+      speedMeasurementMethod: stabilizedSchema
+        ? '3d/1w stabilized endpoint medians, followed by an equal-weight mean across current OpenRouter Standard endpoints'
+        : 'equal-weight mean of current-window p50 values across OpenRouter Standard endpoints',
+      speedStabilizationVersion: stabilizedSchema
+        ? snapshot?.selectionPolicy?.speedStabilization?.algorithmVersion ?? null
+        : null,
     });
   }
   return [...aggregatesByModelId.values()];
@@ -1255,9 +1271,11 @@ async function buildVerifiedCatalog() {
   }
 
   // 3. OpenRouter model catalog supplies identity. When Standard endpoint
-  // statistics exist, practical price and performance use provider-neutral
-  // arithmetic means across every eligible endpoint. The raw endpoint rows,
-  // request-weighted means, medians, and ranges remain in the snapshot.
+  // statistics exist, prices use provider-neutral arithmetic means across
+  // every eligible endpoint. Performance uses each endpoint's verified
+  // 3d/1w stabilization when the v2 snapshot provides it, then preserves the
+  // same provider-neutral endpoint weighting. Raw current values and summary
+  // distributions remain in the snapshot.
   // Catalog list price is retained only as a fallback for models without a
   // complete Standard endpoint aggregate.
   const openRouterPerformanceAggregates = loadOpenRouterPerformanceSnapshot();
@@ -1457,7 +1475,8 @@ async function buildVerifiedCatalog() {
         endpointIds: record.endpointIds,
         providerSlugs: record.providerSlugs,
         totalRequestCount: record.totalRequestCount,
-        selectionMethod: 'provider-neutral arithmetic mean across every accepted OpenRouter Standard endpoint; raw rows, traffic-weighted mean, median, quartiles, and range retained in the verified snapshot',
+        speedStabilizationVersion: record.speedStabilizationVersion,
+        selectionMethod: `${record.speedMeasurementMethod}; raw current rows, auxiliary traffic-weighted mean, median, quartiles, and range retained in the verified snapshot`,
       },
     });
     addObservation({
@@ -1472,7 +1491,8 @@ async function buildVerifiedCatalog() {
       sourceField: 'modelAggregates[].measures.timeToFirstTokenMilliseconds.arithmeticMean',
       scope,
       metadataJson: {
-        aggregation: 'arithmetic mean of endpoint p50_latency across every accepted Standard endpoint',
+        aggregation: record.speedMeasurementMethod,
+        speedStabilizationVersion: record.speedStabilizationVersion,
         endpointCount: record.endpointCount,
         providerCount: record.providerCount,
         totalRequestCount: record.totalRequestCount,
@@ -1481,7 +1501,7 @@ async function buildVerifiedCatalog() {
         sourceReportedUnit: 'milliseconds',
         conversion: 'milliseconds / 1000 = seconds',
         routeVariant: 'standard',
-        caveat: 'mean of provider endpoint p50 values; not a recomputed global request-level p50',
+        caveat: 'summary of provider endpoint p50 series; not a recomputed global request-level p50',
       },
     });
     addObservation({
@@ -1496,13 +1516,14 @@ async function buildVerifiedCatalog() {
       sourceField: 'modelAggregates[].measures.outputSpeedTokensPerSecond.arithmeticMean',
       scope,
       metadataJson: {
-        aggregation: 'arithmetic mean of endpoint p50_throughput across every accepted Standard endpoint',
+        aggregation: record.speedMeasurementMethod,
+        speedStabilizationVersion: record.speedStabilizationVersion,
         endpointCount: record.endpointCount,
         providerCount: record.providerCount,
         totalRequestCount: record.totalRequestCount,
         measureSummary: record.measures.outputSpeedTokensPerSecond,
         routeVariant: 'standard',
-        caveat: 'mean of provider endpoint p50 values; traffic-weighted mean retained separately',
+        caveat: 'equal current-endpoint weighting is primary; current-window traffic-weighted mean is retained separately',
       },
     });
   }

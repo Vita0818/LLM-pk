@@ -481,10 +481,15 @@ function validateOpenRouterPerformance(snapshot) {
     ? snapshot.modelAggregates
     : [];
   const failures = Array.isArray(snapshot?.failures) ? snapshot.failures : [];
+  const historyFailures = Array.isArray(snapshot?.historyFailures)
+    ? snapshot.historyFailures
+    : [];
+  const stabilizedSchema = snapshot?.schemaVersion === 'openrouter-performance-snapshot/v2';
   check(
     'openrouter-performance-schema',
     'OpenRouter performance snapshot uses the expected schema.',
-    snapshot?.schemaVersion === 'openrouter-performance-snapshot/v1',
+    snapshot?.schemaVersion === 'openrouter-performance-snapshot/v1'
+      || stabilizedSchema,
     { schemaVersion: snapshot?.schemaVersion ?? null },
   );
   check(
@@ -496,10 +501,13 @@ function validateOpenRouterPerformance(snapshot) {
   check(
     'openrouter-performance-completeness',
     'OpenRouter performance refresh had no transient request failures.',
-    failures.length === 0 && records.length >= 200,
+    failures.length === 0
+      && (!stabilizedSchema || historyFailures.length === 0)
+      && records.length >= 200,
     {
       endpointRecords: records.length,
       failedModels: failures.length,
+      failedHistoryRequests: historyFailures.length,
       modelsWithPerformance: snapshot?.counts?.modelsWithPerformance ?? null,
     },
   );
@@ -511,7 +519,9 @@ function validateOpenRouterPerformance(snapshot) {
       && typeof record?.modelId === 'string'
       && typeof record?.endpointId === 'string'
       && Number.isFinite(record?.stats?.p50LatencyMilliseconds)
+      && record.stats.p50LatencyMilliseconds > 0
       && Number.isFinite(record?.stats?.p50ThroughputTokensPerSecond)
+      && record.stats.p50ThroughputTokensPerSecond > 0
       && Number.isFinite(record?.stats?.requestCount)
       && record.stats.requestCount > 0
       && record?.pricing?.rawPublishedPricing
@@ -519,11 +529,75 @@ function validateOpenRouterPerformance(snapshot) {
     )),
     { endpointRecords: records.length },
   );
+  if (stabilizedSchema) {
+    const allowedSources = new Set([
+      'three-day-plus-one-week-history',
+      'three-day-history',
+      'one-week-history',
+      'current-window-fallback',
+    ]);
+    const stabilizedMeasureResults = records.flatMap((record) => [
+      record?.stats?.speedStabilization?.latencyMilliseconds,
+      record?.stats?.speedStabilization?.throughputTokensPerSecond,
+    ]);
+    check(
+      'openrouter-speed-stabilization',
+      'OpenRouter speed values use auditable 3d/1w endpoint histories with bounded fallback.',
+      snapshot?.selectionPolicy?.speedStabilization?.algorithmVersion
+        === 'openrouter-endpoint-history-median-geomean/v1'
+        && stabilizedMeasureResults.length === records.length * 2
+        && stabilizedMeasureResults.every((result) => (
+          result?.algorithmVersion === 'openrouter-endpoint-history-median-geomean/v1'
+          && Number.isFinite(result?.value)
+          && result.value > 0
+          && Number.isFinite(result?.currentWindowValue)
+          && result.currentWindowValue > 0
+          && allowedSources.has(result?.source)
+          && result?.windows?.threeDay
+          && result?.windows?.oneWeek
+        ))
+        && records.every((record) => (
+          Number.isFinite(record?.stats?.stabilizedP50LatencyMilliseconds)
+          && record.stats.stabilizedP50LatencyMilliseconds > 0
+          && Number.isFinite(record?.stats?.stabilizedP50ThroughputTokensPerSecond)
+          && record.stats.stabilizedP50ThroughputTokensPerSecond > 0
+        ))
+        && snapshot?.counts?.stabilizedMeasureValues === records.length * 2
+        && snapshot?.counts?.historyBackedMeasureValues
+          + snapshot?.counts?.currentWindowFallbackMeasureValues
+          === snapshot?.counts?.stabilizedMeasureValues
+        && Number.isFinite(snapshot?.counts?.historyBackedMeasureCoverage)
+        && snapshot.counts.historyBackedMeasureCoverage >= 0.5
+        && snapshot.counts.historyBackedMeasureCoverage <= 1
+        && snapshot?.counts?.historyRequestsAttempted
+          === (snapshot?.counts?.modelsWithPerformance ?? 0) * 4
+        && snapshot?.counts?.historyRequestsSucceeded
+          + snapshot?.counts?.historyRequestsFailed
+          === snapshot?.counts?.historyRequestsAttempted,
+      {
+        algorithmVersion:
+          snapshot?.selectionPolicy?.speedStabilization?.algorithmVersion ?? null,
+        historyBackedMeasureCoverage:
+          snapshot?.counts?.historyBackedMeasureCoverage ?? null,
+        historyBackedMeasureValues:
+          snapshot?.counts?.historyBackedMeasureValues ?? null,
+        currentWindowFallbackMeasureValues:
+          snapshot?.counts?.currentWindowFallbackMeasureValues ?? null,
+        historyRequestsAttempted:
+          snapshot?.counts?.historyRequestsAttempted ?? null,
+        historyRequestsFailed: snapshot?.counts?.historyRequestsFailed ?? null,
+      },
+    );
+  }
   const requiredAggregateMeasures = [
     'inputPricePerToken',
     'outputPricePerToken',
     'timeToFirstTokenMilliseconds',
     'outputSpeedTokensPerSecond',
+    ...(stabilizedSchema ? [
+      'instantaneousTimeToFirstTokenMilliseconds',
+      'instantaneousOutputSpeedTokensPerSecond',
+    ] : []),
   ];
   check(
     'openrouter-model-aggregates',

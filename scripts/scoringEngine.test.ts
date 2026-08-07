@@ -369,7 +369,7 @@ chatGptSubscriptionConfiguration.openRouterData = {
 chatGptSubscriptionConfiguration.subscriptionData = {
   planName: 'ChatGPT Pro 20×',
   monthlyPriceUSD: 200,
-  apiEquivalentCostUSD: 4500,
+  apiEquivalentCostUSD: 5000,
   usableQuotaFraction: 1,
 };
 const chatGptPlusConfiguration = makeConfiguration('chatgpt-plus', {});
@@ -379,7 +379,7 @@ chatGptPlusConfiguration.openRouterData = {
 chatGptPlusConfiguration.subscriptionData = {
   planName: 'ChatGPT Plus',
   monthlyPriceUSD: 20,
-  apiEquivalentCostUSD: 225,
+  apiEquivalentCostUSD: 250,
   usableQuotaFraction: 1,
 };
 const claudeSubscriptionConfiguration = makeConfiguration(
@@ -430,11 +430,11 @@ const subscriptionCostsById = new Map(subscriptionCostResults.map((result) => [
 nearlyEqual(subscriptionCostsById.get('api-cost-route')!, 15);
 nearlyEqual(
   subscriptionCostsById.get('chatgpt-pro-subscription')!,
-  15 * 200 / 4500,
+  15 * 200 / 5000,
 );
 nearlyEqual(
   subscriptionCostsById.get('chatgpt-plus')!,
-  15 * 20 / 225,
+  15 * 20 / 250,
 );
 nearlyEqual(
   subscriptionCostsById.get('claude-max-subscription')!,

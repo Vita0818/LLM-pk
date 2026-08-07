@@ -2849,7 +2849,7 @@ interface SubscriptionConfigurationTarget {
 }
 
 const BASE_PLAN_TO_20X_QUOTA_DIVISOR = 20;
-const CHATGPT_PRO_20X_API_EQUIVALENT_USD = 4500;
+const CHATGPT_PRO_20X_API_EQUIVALENT_USD = 5000;
 const CLAUDE_MAX_20X_API_EQUIVALENT_USD = 1600;
 const GOOGLE_AI_ULTRA_20X_API_EQUIVALENT_USD = 5200;
 
@@ -2859,7 +2859,7 @@ const CHATGPT_PLUS_PLAN: SubscriptionPlanDefinition = {
   monthlyPriceUSD: 20,
   apiEquivalentCostUSD:
     CHATGPT_PRO_20X_API_EQUIVALENT_USD / BASE_PLAN_TO_20X_QUOTA_DIVISOR,
-  note: '20 美元档按同一订阅族的 20× 比例折合 225 美元 API 用量；100 美元 5× 档成本效率相同，因此不重复建盒。',
+  note: '20 美元档按同一订阅族的 20× 比例折合 250 美元 API 用量；100 美元 5× 档成本效率相同，因此不重复建盒。',
 };
 
 const CHATGPT_PRO_20X_PLAN: SubscriptionPlanDefinition = {
@@ -2867,7 +2867,7 @@ const CHATGPT_PRO_20X_PLAN: SubscriptionPlanDefinition = {
   planName: 'ChatGPT Pro 20×',
   monthlyPriceUSD: 200,
   apiEquivalentCostUSD: CHATGPT_PRO_20X_API_EQUIVALENT_USD,
-  note: '200 美元档按已确认口径取 4500 美元 API 等价值。',
+  note: '200 美元档按已确认口径取 5000 美元 API 等价值。',
 };
 
 const CLAUDE_PRO_PLAN: SubscriptionPlanDefinition = {
