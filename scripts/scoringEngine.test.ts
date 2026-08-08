@@ -157,16 +157,26 @@ assert.equal(getCoverageStatus(SCORING_CONFIG.coverage.officialMinimum), 'offici
 assert.equal(getCoverageStatus(SCORING_CONFIG.coverage.officialMinimum - 0.001), 'provisional');
 assert.equal(getCoverageStatus(0), 'no_observed_data');
 assert.deepEqual(SCORING_CONFIG.practicalAdjustment, {
-  version: '1.2',
+  version: '1.3',
   speed: {
-    rewardScale: 5,
-    penaltyScale: 8,
-  },
-  cost: {
-    rewardScale: 5,
+    rewardScale: 7.5,
     penaltyScale: 12,
   },
+  cost: {
+    rewardScale: 7.5,
+    penaltyScale: 18,
+  },
 });
+assert.equal(
+  SCORING_CONFIG.practicalAdjustment.speed.rewardScale
+    + SCORING_CONFIG.practicalAdjustment.cost.rewardScale,
+  15,
+);
+assert.equal(
+  SCORING_CONFIG.practicalAdjustment.speed.penaltyScale
+    + SCORING_CONFIG.practicalAdjustment.cost.penaltyScale,
+  30,
+);
 
 // Sparse metric participation narrows the effective score range. Five observed
 // configurations among 35 eligible ones use n_ref=max(10, ceil(.6*35))=21.
@@ -486,4 +496,4 @@ assert.equal(
   null,
 );
 
-console.log('scoringEngine Scoring v1.2 + Practical Adjustment v1.2 policies: PASS');
+console.log('scoringEngine Scoring v1.2 + Practical Adjustment v1.3 policies: PASS');

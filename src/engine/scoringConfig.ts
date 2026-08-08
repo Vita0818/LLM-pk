@@ -7,18 +7,18 @@ import type { CoverageStatus, DomainId } from '../types/llm_pk';
 export const SCORING_CONFIG = {
   version: '1.2',
   practicalAdjustment: {
-    version: '1.2',
+    version: '1.3',
     speed: {
       /** Positive utility approaches this reward without reaching it. */
-      rewardScale: 5,
+      rewardScale: 7.5,
       /** Negative utility approaches this penalty without reaching it. */
-      penaltyScale: 8,
+      penaltyScale: 12,
     },
     cost: {
       /** Positive utility approaches this reward without reaching it. */
-      rewardScale: 5,
+      rewardScale: 7.5,
       /** Negative utility approaches this penalty without reaching it. */
-      penaltyScale: 12,
+      penaltyScale: 18,
     },
   },
   reliability: {
